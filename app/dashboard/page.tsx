@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardCard from "@/components/layout/DashboardCard";
 
-export default function Home() {
+export default function DashboardPage() {
   const cards = [
     { title: "Projects", value: "12" },
     { title: "Prompts", value: "184" },
@@ -11,18 +11,9 @@ export default function Home() {
   ];
 
   const recentProjects = [
-    {
-      name: "AI Landing Page",
-      status: "Active",
-    },
-    {
-      name: "Marketing Dashboard",
-      status: "Draft",
-    },
-    {
-      name: "Prompt Library",
-      status: "Active",
-    },
+    { name: "AI Landing Page", status: "Active" },
+    { name: "Marketing Dashboard", status: "Draft" },
+    { name: "Prompt Library", status: "Active" },
   ];
 
   return (
@@ -33,7 +24,6 @@ export default function Home() {
         <Header />
 
         <main className="flex-1 space-y-8 p-8">
-
           <section>
             <h2 className="text-4xl font-bold text-white">
               👋 Good Afternoon, Evan
@@ -55,22 +45,17 @@ export default function Home() {
           </section>
 
           <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-
             <h3 className="mb-6 text-xl font-semibold text-white">
               Recent Projects
             </h3>
 
             <div className="space-y-4">
-
               {recentProjects.map((project) => (
-
                 <div
                   key={project.name}
                   className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
                 >
-
                   <div>
-
                     <h4 className="font-medium text-white">
                       {project.name}
                     </h4>
@@ -78,7 +63,6 @@ export default function Home() {
                     <p className="text-sm text-slate-400">
                       Last updated today
                     </p>
-
                   </div>
 
                   <span
@@ -90,15 +74,10 @@ export default function Home() {
                   >
                     {project.status}
                   </span>
-
                 </div>
-
               ))}
-
             </div>
-
           </section>
-
         </main>
       </div>
     </div>
