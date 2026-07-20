@@ -12,7 +12,7 @@ export default function AddPromptButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-medium text-white transition hover:bg-sky-500"
+      className="flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-500"
     >
       <Plus size={18} />
       Add Prompt
