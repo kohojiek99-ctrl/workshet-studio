@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Project } from "@/types/project";
-import { getProjects, saveProjects } from "@/lib/projects";
+import { supabase } from "@/lib/supabase"; // 🚀 KITA PANGGIL MESIN AWANNYA DI SINI
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -13,8 +13,22 @@ export function useProjects() {
   const [type, setType] = useState("");
   const [status, setStatus] = useState("Planning");
 
+  // 1. FUNGSI AMBIL DATA DARI SUPABASE (Otomatis jalan saat aplikasi dibuka)
+  const fetchProjects = async () => {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false }); // Urutkan dari yang terbaru
+      
+    if (error) {
+      console.error("Gagal ambil data:", error);
+    } else if (data) {
+      setProjects(data as Project[]);
+    }
+  };
+
   useEffect(() => {
-    setProjects(getProjects());
+    fetchProjects(); 
   }, []);
 
   const openModal = () => {
@@ -41,7 +55,8 @@ export function useProjects() {
     setStatus("Planning");
   };
 
-  const saveProject = () => {
+  // 2. FUNGSI SIMPAN/UPDATE KE SUPABASE
+  const saveProject = async () => {
     if (!name.trim() || !type.trim()) return;
 
     const today = new Date().toLocaleDateString("en-US", {
@@ -50,54 +65,72 @@ export function useProjects() {
       year: "numeric"
     });
 
-    let updatedProjects;
-
     if (editingId) {
-      updatedProjects = projects.map((project) =>
-        project.id === editingId
-          ? { ...project, name: name.trim(), type: type.trim(), status, lastUpdated: today }
-          : project
-      );
+      // PROSES UPDATE DATA LAMA
+      const { error } = await supabase
+        .from('projects')
+        .update({ name: name.trim(), type: type.trim(), status, lastUpdated: today })
+        .eq('id', editingId);
+        
+      if (!error) {
+        setProjects(projects.map(p => p.id === editingId ? { ...p, name: name.trim(), type: type.trim(), status, lastUpdated: today } : p));
+      }
     } else {
-      const newProject: Project = {
-        id: Date.now().toString(),
+      // PROSES SIMPAN DATA BARU
+      const newProject = {
         name: name.trim(),
         type: type.trim(),
         status: status,
         lastUpdated: today,
       };
-      updatedProjects = [newProject, ...projects];
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([newProject])
+        .select(); // Minta Supabase kembalikan data berserta ID barunya
+        
+      if (!error && data) {
+        setProjects([data[0] as Project, ...projects]);
+      }
     }
-    
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
     closeModal();
   };
 
-  const deleteProject = (id: string) => {
-    const updatedProjects = projects.filter((project) => project.id !== id);
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+  // 3. FUNGSI HAPUS DATA DI SUPABASE
+  const deleteProject = async (id: string) => {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+      
+    if (!error) {
+      setProjects(projects.filter((project) => project.id !== id));
+    }
   };
 
-  // FITUR BARU: Duplicate Project
-  const duplicateProject = (project: Project) => {
+  // 4. FUNGSI DUPLIKAT DATA DI SUPABASE
+  const duplicateProject = async (project: Project) => {
     const today = new Date().toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric"
     });
     
-    const duplicatedProject: Project = {
-      ...project,
-      id: Date.now().toString(), // Bikin ID baru
-      name: `${project.name} (Copy)`, // Tambahin tulisan (Copy) biar beda
+    const duplicatedProject = {
+      name: `${project.name} (Copy)`,
+      type: project.type,
+      status: project.status,
       lastUpdated: today,
     };
     
-    const updatedProjects = [duplicatedProject, ...projects];
-    setProjects(updatedProjects);
-    saveProjects(updatedProjects);
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([duplicatedProject])
+      .select();
+      
+    if (!error && data) {
+      setProjects([data[0] as Project, ...projects]);
+    }
   };
 
   return {

@@ -2,52 +2,45 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Prompt } from "@/types/prompt";
-import { getPrompts, savePrompts } from "@/lib/prompts";
+import { supabase } from "@/lib/supabase"; // 🚀 MESIN AWAN SUPABASE NYALA DI SINI
 
 export function usePrompts() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
-  
-  // Kita tambahkan state baru sebagai "lampu lalu lintas"
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Search
   const [search, setSearch] = useState("");
-
-  // Favorites (local only)
   const [favorites, setFavorites] = useState<string[]>([]);
-
-  // Copy state
   const [copied, setCopied] = useState("");
-
-  // Modal
   const [open, setOpen] = useState(false);
 
-  // Form
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [promptText, setPromptText] = useState(""); // State buat nampung teks input
 
-  /**
-   * 1. Load prompts (Langkah Pertama)
-   */
+  // 1. AMBIL DATA DARI SUPABASE OTOMATIS
+  const fetchPrompts = async () => {
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      // Kita konversi format Supabase (content) ke format kodingan lu (prompt)
+      const formattedData: Prompt[] = data.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        category: item.category,
+        prompt: item.content, 
+        createdAt: item.created_at,
+        updatedAt: item.created_at,
+      }));
+      setPrompts(formattedData);
+    }
+  };
+
   useEffect(() => {
-    setPrompts(getPrompts());
-    setIsLoaded(true); // Tandai bahwa data sudah selesai dibaca
+    fetchPrompts();
   }, []);
 
-  /**
-   * 2. Save prompts (Langkah Kedua)
-   */
-  useEffect(() => {
-    // Hanya simpan JIKA data sudah selesai dibaca di awal
-    if (isLoaded) {
-      savePrompts(prompts);
-    }
-  }, [prompts, isLoaded]);
-
-  /**
-   * Load Favorites dari Local Storage
-   */
+  // Fitur Favorites tetap pakai Local Storage (memori HP) karena ini selera personal
   useEffect(() => {
     const savedFavorites = localStorage.getItem("prompt-favorites");
     if (savedFavorites) {
@@ -55,19 +48,12 @@ export function usePrompts() {
     }
   }, []);
 
-  /**
-   * Save Favorites ke Local Storage
-   */
   useEffect(() => {
     localStorage.setItem("prompt-favorites", JSON.stringify(favorites));
   }, [favorites]);
 
-  /**
-   * Filtered Prompt List
-   */
   const filteredPrompts = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-
     if (!keyword) return prompts;
 
     return prompts.filter((item) => {
@@ -79,102 +65,89 @@ export function usePrompts() {
     });
   }, [prompts, search]);
 
-  /**
-   * Copy Prompt
-   */
   function copyPrompt(text: string, id: string) {
     navigator.clipboard.writeText(text);
     setCopied(id);
-    setTimeout(() => {
-      setCopied("");
-    }, 1500);
+    setTimeout(() => setCopied(""), 1500);
   }
 
-  /**
-   * Favorite
-   */
   function toggleFavorite(id: string) {
     setFavorites((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   }
 
-  /**
-   * Open Modal
-   */
   function openModal() {
     setOpen(true);
   }
 
-  /**
-   * Close Modal
-   */
   function closeModal() {
     setOpen(false);
     setTitle("");
     setCategory("");
-    setPrompt("");
+    setPromptText("");
   }
 
-  /**
-   * Add Prompt
-   */
-  function savePrompt() {
-    if (!title.trim() || !category.trim() || !prompt.trim()) {
-      return;
-    }
+  // 2. SIMPAN DATA BARU KE SUPABASE
+  const savePrompt = async () => {
+    if (!title.trim() || !category.trim() || !promptText.trim()) return;
 
-    const newPrompt: Prompt = {
-      id: crypto.randomUUID(),
+    const newEntry = {
       title: title.trim(),
       category: category.trim(),
-      prompt: prompt.trim(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      content: promptText.trim(), // Kirim ke DB pakai nama 'content'
     };
 
-    setPrompts((prev) => [newPrompt, ...prev]);
-    closeModal();
-  }
+    const { data, error } = await supabase
+      .from("prompts")
+      .insert([newEntry])
+      .select();
 
-  /**
-   * Delete
-   */
-  function deletePrompt(id: string) {
-    setPrompts((prev) => prev.filter((item) => item.id !== id));
-  }
+    if (!error && data) {
+      const inserted = data[0];
+      const newPrompt: Prompt = {
+        id: inserted.id,
+        title: inserted.title,
+        category: inserted.category,
+        prompt: inserted.content,
+        createdAt: inserted.created_at,
+        updatedAt: inserted.created_at,
+      };
+      setPrompts((prev) => [newPrompt, ...prev]);
+      closeModal();
+    }
+  };
 
-  /**
-   * Update
-   */
-  function updatePrompt(updatedPrompt: Prompt) {
-    setPrompts((prev) =>
-      prev.map((item) => (item.id === updatedPrompt.id ? updatedPrompt : item))
-    );
-  }
+  // 3. HAPUS DATA DI SUPABASE
+  const deletePrompt = async (id: string) => {
+    const { error } = await supabase.from("prompts").delete().eq("id", id);
+    if (!error) {
+      setPrompts((prev) => prev.filter((item) => item.id !== id));
+    }
+  };
 
+  // 4. UPDATE DATA DI SUPABASE
+  const updatePrompt = async (updatedPrompt: Prompt) => {
+    const { error } = await supabase
+      .from("prompts")
+      .update({
+        title: updatedPrompt.title,
+        category: updatedPrompt.category,
+        content: updatedPrompt.prompt, // Simpan ke DB pakai 'content'
+      })
+      .eq("id", updatedPrompt.id);
+
+    if (!error) {
+      setPrompts((prev) =>
+        prev.map((item) => (item.id === updatedPrompt.id ? updatedPrompt : item))
+      );
+    }
+  };
+
+  // Kembalikan nama state 'promptText' menjadi 'prompt' agar aplikasi lu gak error
   return {
-    prompts,
-    filteredPrompts,
-    search,
-    setSearch,
-    favorites,
-    toggleFavorite,
-    copied,
-    copyPrompt,
-    open,
-    openModal,
-    closeModal,
-    title,
-    setTitle,
-    category,
-    setCategory,
-    prompt,
-    setPrompt,
-    savePrompt,
-    deletePrompt,
-    updatePrompt,
+    prompts, filteredPrompts, search, setSearch, favorites, toggleFavorite, copied, copyPrompt,
+    open, openModal, closeModal, title, setTitle, category, setCategory, prompt: promptText, setPrompt: setPromptText,
+    savePrompt, deletePrompt, updatePrompt,
   };
 }
