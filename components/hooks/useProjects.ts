@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Project } from "@/types/project";
-import { supabase } from "@/lib/supabase"; // 🚀 KITA PANGGIL MESIN AWANNYA DI SINI
+import { supabase } from "@/lib/supabase";
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -13,12 +13,11 @@ export function useProjects() {
   const [type, setType] = useState("");
   const [status, setStatus] = useState("Planning");
 
-  // 1. FUNGSI AMBIL DATA DARI SUPABASE (Otomatis jalan saat aplikasi dibuka)
   const fetchProjects = async () => {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .order('created_at', { ascending: false }); // Urutkan dari yang terbaru
+      .order('created_at', { ascending: false });
       
     if (error) {
       console.error("Gagal ambil data:", error);
@@ -55,7 +54,6 @@ export function useProjects() {
     setStatus("Planning");
   };
 
-  // 2. FUNGSI SIMPAN/UPDATE KE SUPABASE
   const saveProject = async () => {
     if (!name.trim() || !type.trim()) return;
 
@@ -66,7 +64,6 @@ export function useProjects() {
     });
 
     if (editingId) {
-      // PROSES UPDATE DATA LAMA
       const { error } = await supabase
         .from('projects')
         .update({ name: name.trim(), type: type.trim(), status, lastUpdated: today })
@@ -76,7 +73,6 @@ export function useProjects() {
         setProjects(projects.map(p => p.id === editingId ? { ...p, name: name.trim(), type: type.trim(), status, lastUpdated: today } : p));
       }
     } else {
-      // PROSES SIMPAN DATA BARU
       const newProject = {
         name: name.trim(),
         type: type.trim(),
@@ -87,7 +83,7 @@ export function useProjects() {
       const { data, error } = await supabase
         .from('projects')
         .insert([newProject])
-        .select(); // Minta Supabase kembalikan data berserta ID barunya
+        .select();
         
       if (!error && data) {
         setProjects([data[0] as Project, ...projects]);
@@ -96,7 +92,6 @@ export function useProjects() {
     closeModal();
   };
 
-  // 3. FUNGSI HAPUS DATA DI SUPABASE
   const deleteProject = async (id: string) => {
     const { error } = await supabase
       .from('projects')
@@ -108,7 +103,6 @@ export function useProjects() {
     }
   };
 
-  // 4. FUNGSI DUPLIKAT DATA DI SUPABASE
   const duplicateProject = async (project: Project) => {
     const today = new Date().toLocaleDateString("en-US", {
       month: "short",
