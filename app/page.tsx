@@ -1,105 +1,115 @@
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import DashboardCard from "@/components/layout/DashboardCard";
-import Link from "next/link"; // Gua tambahin ini buat fungsi pindah halaman
+"use client";
 
-export default function Home() {
-  const cards = [
-    { title: "Projects", value: "12" },
-    { title: "Prompts", value: "184" },
-    { title: "Assets", value: "632" },
-    { title: "AI Credits", value: "9,240" },
-  ];
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
-  const recentProjects = [
-    {
-      name: "AI Landing Page",
-      status: "Active",
-    },
-    {
-      name: "Marketing Dashboard",
-      status: "Draft",
-    },
-    {
-      name: "Prompt Library",
-      status: "Active",
-    },
-  ];
+export default function DashboardPage() {
+  const [greeting, setGreeting] = useState("Hello");
+  const [userName, setUserName] = useState("Creator"); // Default fallback
+
+  useEffect(() => {
+    // 1. Fungsi ngatur sapaan otomatis berdasarkan jam lokal
+    const currentHour = new Date().getHours();
+    if (currentHour >= 5 && currentHour < 12) {
+      setGreeting("Good Morning");
+    } else if (currentHour >= 12 && currentHour < 17) {
+      setGreeting("Good Afternoon");
+    } else if (currentHour >= 17 && currentHour < 21) {
+      setGreeting("Good Evening");
+    } else {
+      setGreeting("Good Night");
+    }
+
+    // 2. Fungsi ngambil data user yang lagi aktif (login)
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Cek apakah user punya nama di profil metadata
+        const nameFromMeta = user.user_metadata?.full_name || user.user_metadata?.name;
+        
+        // Kalau gak ada nama, ambil kata di depan @ pada email (contoh: budi@gmail.com -> budi)
+        const nameFromEmail = user.email ? user.email.split('@')[0] : "Creator";
+        
+        let finalName = nameFromMeta || nameFromEmail;
+        
+        // Bikin huruf pertama jadi kapital biar rapi (budi -> Budi)
+        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+        
+        setUserName(finalName);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
-      <Sidebar />
+    <div className="p-8 text-white min-h-screen">
+      {/* Sapaan Dinamis & Nama User */}
+      <h1 className="text-4xl font-serif font-bold mb-2 flex items-center gap-3">
+        👋 {greeting}, {userName}!
+      </h1>
+      <p className="text-gray-400 mb-10">
+        Welcome back! Ready to build something amazing today?
+      </p>
 
-      <div className="flex flex-1 flex-col">
-        <Header />
+      {/* Grid Kartu Statistik */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-[#1a1f33] p-6 rounded-2xl border border-gray-800 shadow-sm transition-colors hover:border-emerald-500/50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-400 font-medium">Projects</h3>
+          </div>
+          <p className="text-4xl font-serif font-bold mb-2">12</p>
+          <p className="text-emerald-500 text-sm font-medium">+12% this month</p>
+        </div>
 
-        <main className="flex-1 space-y-8 p-8">
-          
-          {/* Bagian Greeting & Tombol Jalan Pintas AI */}
-          <section className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-4xl font-bold text-white">
-                👋 Good Afternoon, Evan
-              </h2>
-              <p className="mt-2 text-slate-400">
-                Welcome back! Ready to build something amazing today?
-              </p>
-            </div>
+        <div className="bg-[#1a1f33] p-6 rounded-2xl border border-gray-800 shadow-sm transition-colors hover:border-emerald-500/50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-400 font-medium">Prompts</h3>
+          </div>
+          <p className="text-4xl font-serif font-bold mb-2">184</p>
+          <p className="text-emerald-500 text-sm font-medium">+12% this month</p>
+        </div>
 
-            {/* Ini tombol baru buat langsung lompat ke halaman AI Chat */}
-            <Link
-              href="/chat"
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-500 hover:shadow-blue-500/30"
-            >
-              ✨ Buka Asisten AI Pro
-            </Link>
-          </section>
+        <div className="bg-[#1a1f33] p-6 rounded-2xl border border-gray-800 shadow-sm transition-colors hover:border-emerald-500/50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-400 font-medium">Assets</h3>
+          </div>
+          <p className="text-4xl font-serif font-bold mb-2">632</p>
+          <p className="text-emerald-500 text-sm font-medium">+12% this month</p>
+        </div>
 
-          <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {cards.map((card) => (
-              <DashboardCard
-                key={card.title}
-                title={card.title}
-                value={card.value}
-              />
-            ))}
-          </section>
+        <div className="bg-[#1a1f33] p-6 rounded-2xl border border-gray-800 shadow-sm transition-colors hover:border-emerald-500/50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-400 font-medium">AI Credits</h3>
+          </div>
+          <p className="text-4xl font-serif font-bold mb-2">9,240</p>
+          <p className="text-emerald-500 text-sm font-medium">+12% this month</p>
+        </div>
+      </div>
 
-          <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="mb-6 text-xl font-semibold text-white">
-              Recent Projects
-            </h3>
-
-            <div className="space-y-4">
-              {recentProjects.map((project) => (
-                <div
-                  key={project.name}
-                  className="flex items-center justify-between rounded-lg bg-slate-800 p-4"
-                >
-                  <div>
-                    <h4 className="font-medium text-white">
-                      {project.name}
-                    </h4>
-                    <p className="text-sm text-slate-400">
-                      Last updated today
-                    </p>
-                  </div>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      project.status === "Active"
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-yellow-500/20 text-yellow-400"
-                    }`}
-                  >
-                    {project.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-        </main>
+      {/* Bagian Recent Projects */}
+      <div className="bg-[#1a1f33] p-6 rounded-2xl border border-gray-800 shadow-sm">
+        <h3 className="text-lg font-serif font-bold mb-6">Recent Projects</h3>
+        <div className="flex justify-between items-center p-4 bg-[#141829] rounded-xl border border-gray-800/50 hover:border-gray-700 transition-colors">
+          <div>
+            <h4 className="font-medium text-gray-200">AI Landing Page</h4>
+            <p className="text-sm text-gray-500 mt-1">Last updated today</p>
+          </div>
+          <span className="px-3 py-1 text-xs font-medium text-emerald-500 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+            Active
+          </span>
+        </div>
+        
+        <div className="flex justify-between items-center p-4 bg-[#141829] rounded-xl border border-gray-800/50 hover:border-gray-700 transition-colors mt-4">
+          <div>
+            <h4 className="font-medium text-gray-200">Marketing Dashboard</h4>
+            <p className="text-sm text-gray-500 mt-1">Last updated 2 days ago</p>
+          </div>
+          <span className="px-3 py-1 text-xs font-medium text-yellow-500 bg-yellow-500/10 rounded-full border border-yellow-500/20">
+            Draft
+          </span>
+        </div>
       </div>
     </div>
   );
