@@ -7,115 +7,87 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  
   const router = useRouter();
 
-  // Fungsi buat DAFTAR (Sign Up)
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage("❌ Gagal daftar: " + error.message);
+    if (isSignUp) {
+      // Proses Daftar Akun Baru
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) alert(error.message);
+      else {
+        alert("Pendaftaran berhasil! Silakan cek email atau langsung masuk.");
+        setIsSignUp(false);
+      }
     } else {
-      setMessage("✅ Pendaftaran berhasil! Silakan klik Login.");
-    }
-    setLoading(false);
-  };
-
-  // Fungsi buat MASUK (Sign In)
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage("❌ Gagal login: " + error.message);
-    } else {
-      setMessage("🚀 Berhasil login! Mengalihkan...");
-      setTimeout(() => {
-        router.push("/"); 
-      }, 1500);
+      // Proses Masuk / Login
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert(error.message);
+      } else {
+        router.push("/"); // Lempar ke halaman utama kalau sukses
+        router.refresh();
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl dark:bg-gray-800">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Worksheet Studio
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Silakan masuk ke akun Anda
+    <div className="min-h-screen bg-[#111424] text-white flex items-center justify-center p-6">
+      <div className="bg-[#1a1f33] p-8 rounded-2xl border border-gray-800 w-full max-w-md shadow-xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-serif font-bold mb-2">Worksheet Studio 🧠</h1>
+          <p className="text-sm text-gray-400">
+            {isSignUp ? "Daftar akun eksklusif ruang kerja kamu" : "Masuk ke brankas pusat kontrol kreator"}
           </p>
         </div>
 
-        <form className="mt-8 space-y-6">
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label className="sr-only" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="relative block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="sr-only" htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="relative block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nama@domain.com"
+              className="w-full bg-[#111424] border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500"
+            />
           </div>
 
-          {message && (
-            <div className="text-sm font-medium text-center text-red-500">
-              {message}
-            </div>
-          )}
-
-          <div className="flex gap-4">
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
-            >
-              {loading ? "Tunggu..." : "Login"}
-            </button>
-            <button
-              onClick={handleSignUp}
-              disabled={loading}
-              className="flex w-full justify-center rounded-lg bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-600"
-            >
-              Daftar
-            </button>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-[#111424] border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500"
+            />
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition-all text-sm disabled:opacity-50 mt-2"
+          >
+            {loading ? "Memproses..." : isSignUp ? "Daftar Sekarang" : "Masuk Studio"}
+          </button>
         </form>
+
+        <div className="text-center mt-6">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-xs text-gray-400 hover:text-emerald-400 transition-colors"
+          >
+            {isSignUp ? "Sudah punya akun? Masuk di sini" : "Belum punya akun? Daftar akun baru"}
+          </button>
+        </div>
       </div>
     </div>
   );

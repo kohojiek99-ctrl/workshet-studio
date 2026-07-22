@@ -1,176 +1,136 @@
 "use client";
 
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import { useProjects } from "@/components/hooks/useProjects";
-// Tambahkan ikon Copy
-import { Trash2, Plus, X, Edit, Copy } from "lucide-react";
+import { useState } from "react";
+
+// Tipe data buat proyeknya
+type Project = {
+  id: number;
+  title: string;
+  category: string;
+  status: "ide" | "editing" | "ready";
+  date: string;
+};
+
+// Data simulasi awal
+const initialProjects: Project[] = [
+  { id: 1, title: "Promo Powerbank Flash Sale", category: "Produk Fisik", status: "ide", date: "24 Jul" },
+  { id: 2, title: "Video 5 Detik Notion Template", category: "Produk Digital", status: "editing", date: "22 Jul" },
+  { id: 3, title: "Testimoni Affiliate Batch 1", category: "Sosmed", status: "editing", date: "23 Jul" },
+  { id: 4, title: "Bumper Outro Keranjang Kuning", category: "Aset", status: "ready", date: "20 Jul" },
+];
 
 export default function ProjectsPage() {
-  const {
-    projects, open, openModal, openEditModal, closeModal,
-    name, setName, type, setType, status, setStatus,
-    saveProject, deleteProject, duplicateProject, editingId,
-  } = useProjects();
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [isAdding, setIsAdding] = useState(false);
+
+  // Fungsi buat ngerubah status (Mindahin kartu antar kolom)
+  const handleStatusChange = (id: number, newStatus: "ide" | "editing" | "ready") => {
+    setProjects(projects.map(proj => 
+      proj.id === id ? { ...proj, status: newStatus } : proj
+    ));
+  };
+
+  // Filter proyek berdasarkan statusnya
+  const ideas = projects.filter(p => p.status === "ide");
+  const editings = projects.filter(p => p.status === "editing");
+  const readys = projects.filter(p => p.status === "ready");
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
-      <Sidebar />
-
-      <div className="flex flex-1 flex-col">
-        <Header />
-
-        <main className="flex-1 p-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  Projects
-                </h1>
-                <p className="mt-2 text-slate-400">
-                  Track and manage your ongoing work.
-                </p>
-              </div>
-
-              <button 
-                onClick={openModal}
-                className="flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 font-semibold text-white transition hover:bg-sky-600"
-              >
-                <Plus size={20} />
-                New Project
-              </button>
-            </div>
-
-            <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-6">
-              {projects.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">No projects yet. Create one above!</p>
-              ) : (
-                <div className="space-y-4">
-                  {projects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="flex flex-col gap-4 rounded-lg border border-slate-700 bg-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between transition hover:border-slate-600"
-                    >
-                      <div className="flex-1">
-                        <h3 className="text-lg font-medium text-white">
-                          {project.name}
-                        </h3>
-                        <div className="mt-1 flex items-center gap-3 text-sm text-slate-400">
-                          <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
-                            {project.type}
-                          </span>
-                          <span>Updated: {project.lastUpdated}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        <span
-                          className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                            project.status === "Completed"
-                              ? "bg-green-500/20 text-green-400"
-                              : project.status === "In Progress"
-                              ? "bg-sky-500/20 text-sky-400"
-                              : "bg-yellow-500/20 text-yellow-400"
-                          }`}
-                        >
-                          {project.status}
-                        </span>
-                        
-                        {/* Tombol Duplicate */}
-                        <button
-                          onClick={() => duplicateProject(project)}
-                          className="rounded-lg bg-slate-900 p-2 text-slate-400 transition hover:bg-green-500/20 hover:text-green-400"
-                          title="Duplicate Project"
-                        >
-                          <Copy size={18} />
-                        </button>
-
-                        {/* Tombol Edit */}
-                        <button
-                          onClick={() => openEditModal(project)}
-                          className="rounded-lg bg-slate-900 p-2 text-slate-400 transition hover:bg-blue-500/20 hover:text-blue-400"
-                          title="Edit Project"
-                        >
-                          <Edit size={18} />
-                        </button>
-
-                        {/* Tombol Hapus */}
-                        <button
-                          onClick={() => deleteProject(project.id)}
-                          className="rounded-lg bg-slate-900 p-2 text-slate-400 transition hover:bg-red-500/20 hover:text-red-400"
-                          title="Delete Project"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </main>
+    <div className="p-8 text-white min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+        <div>
+          <h1 className="text-4xl font-serif font-bold mb-2">Project Board 📊</h1>
+          <p className="text-gray-400">
+            Pantau progress pembuatan konten dan aset promosi kamu di sini.
+          </p>
+        </div>
+        
+        <button 
+          onClick={() => setIsAdding(!isAdding)}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-900/20 flex items-center gap-2"
+        >
+          <span className="text-xl">+</span> Buat Project Baru
+        </button>
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">
-                {editingId ? "Edit Project" : "Add New Project"}
-              </h2>
-              <button onClick={closeModal} className="text-slate-400 transition hover:text-white">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">Project Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white outline-none transition focus:border-sky-500"
-                  placeholder="e.g. Summer Campaign"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">Project Type</label>
-                <input
-                  type="text"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white outline-none transition focus:border-sky-500"
-                  placeholder="e.g. Marketing, Video Asset"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white outline-none transition focus:border-sky-500"
-                >
-                  <option value="Planning">Planning</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
-
-              <button
-                onClick={saveProject}
-                disabled={!name.trim() || !type.trim()}
-                className="mt-4 w-full rounded-lg bg-sky-500 py-3 font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {editingId ? "Save Changes" : "Save Project"}
-              </button>
-            </div>
+      {/* Papan Kanban (3 Kolom) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* KOLOM 1: IDEASI */}
+        <div className="bg-[#1a1f33]/50 rounded-2xl p-4 border border-gray-800 h-fit min-h-[500px]">
+          <div className="flex justify-between items-center mb-4 px-2">
+            <h3 className="font-semibold text-gray-300 flex items-center gap-2">
+              💡 Ideasi <span className="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded-full">{ideas.length}</span>
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {ideas.map(proj => (
+              <ProjectCard key={proj.id} project={proj} onStatusChange={handleStatusChange} />
+            ))}
           </div>
         </div>
-      )}
+
+        {/* KOLOM 2: PROSES EDITING */}
+        <div className="bg-[#1a1f33]/50 rounded-2xl p-4 border border-blue-900/30 h-fit min-h-[500px]">
+          <div className="flex justify-between items-center mb-4 px-2">
+            <h3 className="font-semibold text-blue-400 flex items-center gap-2">
+              ✂️ Proses Editing <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded-full">{editings.length}</span>
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {editings.map(proj => (
+              <ProjectCard key={proj.id} project={proj} onStatusChange={handleStatusChange} />
+            ))}
+          </div>
+        </div>
+
+        {/* KOLOM 3: SIAP PUBLISH */}
+        <div className="bg-[#1a1f33]/50 rounded-2xl p-4 border border-emerald-900/30 h-fit min-h-[500px]">
+          <div className="flex justify-between items-center mb-4 px-2">
+            <h3 className="font-semibold text-emerald-400 flex items-center gap-2">
+              🚀 Siap Publish <span className="bg-emerald-900/50 text-emerald-300 text-xs px-2 py-1 rounded-full">{readys.length}</span>
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {readys.map(proj => (
+              <ProjectCard key={proj.id} project={proj} onStatusChange={handleStatusChange} />
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// Komponen Kartu Proyek
+function ProjectCard({ project, onStatusChange }: { project: Project, onStatusChange: (id: number, status: any) => void }) {
+  return (
+    <div className="bg-[#111424] p-5 rounded-xl border border-gray-700 hover:border-gray-500 transition-all shadow-sm group">
+      <div className="flex justify-between items-start mb-3">
+        <span className="text-xs font-medium px-2 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700">
+          {project.category}
+        </span>
+        <span className="text-xs text-gray-500">{project.date}</span>
+      </div>
+      
+      <h4 className="font-medium text-gray-200 mb-4 leading-snug">
+        {project.title}
+      </h4>
+      
+      <div className="pt-3 border-t border-gray-800 flex justify-between items-center">
+        <span className="text-xs text-gray-500">Pindah ke:</span>
+        <select 
+          value={project.status}
+          onChange={(e) => onStatusChange(project.id, e.target.value)}
+          className="bg-[#1a1f33] text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
+        >
+          <option value="ide">💡 Ideasi</option>
+          <option value="editing">✂️ Editing</option>
+          <option value="ready">🚀 Siap Publish</option>
+        </select>
+      </div>
     </div>
   );
 }
