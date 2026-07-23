@@ -2,6 +2,7 @@
 
 import "./globals.css";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
@@ -14,9 +15,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
   
-  // State untuk buka/tutup menu di layar HP
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const isLoginPage = pathname === "/login";
 
   const handleLogout = async () => {
@@ -47,11 +46,18 @@ export default function RootLayout({
     <html lang="id">
       <body className="bg-[#111424] text-white antialiased flex flex-col md:flex-row min-h-screen">
         
-        {/* Navbar Khusus Mobile (Hanya muncul di HP) */}
+        {/* Navbar Khusus Mobile */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#111424]">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🧠</span>
-            <h1 className="text-lg font-serif font-bold">Worksheet Studio</h1>
+          <div className="flex items-center">
+            {/* Logo untuk layar HP diperbesar */}
+            <Image 
+              src="/logo.png" 
+              alt="Worksheet Studio Logo" 
+              width={200} 
+              height={80} 
+              className="w-36 h-auto object-contain"
+              priority
+            />
           </div>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -61,17 +67,23 @@ export default function RootLayout({
           </button>
         </div>
 
-        {/* Sidebar Kiri (Akan jadi Dropdown di HP, dan Sidebar normal di PC) */}
+        {/* Sidebar Kiri */}
         <aside
           className={`${
             isMobileMenuOpen ? "flex" : "hidden"
           } md:flex w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex-col justify-between bg-[#111424] shrink-0 transition-all`}
         >
           <div>
-            {/* Logo / Judul (Hanya Muncul di Desktop) */}
-            <div className="hidden md:flex items-center gap-3 mb-10 px-2">
-              <span className="text-2xl">🧠</span>
-              <h1 className="text-xl font-serif font-bold tracking-wide">Worksheet Studio</h1>
+            {/* Logo untuk layar Desktop/Laptop diperbesar */}
+            <div className="hidden md:flex items-center mb-10">
+              <Image 
+                src="/logo.png" 
+                alt="Worksheet Studio Logo" 
+                width={300} 
+                height={120} 
+                className="w-48 h-auto object-contain -ml-2"
+                priority
+              />
             </div>
 
             {/* Menu Navigasi */}
@@ -82,7 +94,7 @@ export default function RootLayout({
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)} // Otomatis tutup menu kalau link diklik di HP
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                       isActive
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
