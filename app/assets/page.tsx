@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // Inisialisasi Supabase Client
@@ -21,8 +21,54 @@ export default function AssetsPage() {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   
-  // State buat ngasih tau kalau lagi proses upload
   const [isUploading, setIsUploading] = useState(false);
+
+  // STATE BARU: Buat nyimpen daftar file dan status loading
+  const [files, setFiles] = useState<any[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+  // FUNGSI BARU: Buat ngambil data file dari Supabase
+  const fetchFiles = async () => {
+    setIsLoadingFiles(true);
+    try {
+      // Kita cari di dalam folder kategori yang lagi aktif
+      const folderPath = activeCategory; 
+      
+      const { data, error } = await supabase.storage
+        .from('assets')
+        .list(folderPath, {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' }, // yang terbaru di atas
+        });
+
+      if (error) throw error;
+
+      // Filter file yang valid aja
+      const validFiles = data?.filter((file) => file.name !== '.emptyFolderPlaceholder') || [];
+      
+      // Bikin array baru lengkap sama URL link-nya biar bisa diklik
+      const filesWithUrls = validFiles.map((file) => {
+        const filePath = `${folderPath}/${file.name}`;
+        const { data: publicUrlData } = supabase.storage.from('assets').getPublicUrl(filePath);
+        return {
+          ...file,
+          url: publicUrlData.publicUrl,
+        };
+      });
+
+      setFiles(filesWithUrls);
+    } catch (error: any) {
+      console.error("Gagal ngambil file:", error.message);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  // Panggil fetchFiles setiap kali kategori diklik/berubah
+  useEffect(() => {
+    fetchFiles();
+  }, [activeCategory]);
 
   const handleAddCategory = () => {
     if (newCategoryName.trim() !== "") {
@@ -32,37 +78,33 @@ export default function AssetsPage() {
     }
   };
 
-  // Fungsi ASLI buat upload ke Supabase
+  // Fungsi Upload (Udah dimodifikasi biar langsung refresh daftar file abis upload)
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true); // Nyalain status loading
+    setIsUploading(true); 
 
     try {
-      // Bikin nama file unik biar nggak bentrok kalau ada file yang namanya sama
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      // Bikin folder berdasarkan kategori yang dipilih
       const filePath = `${activeCategory}/${fileName}`;
 
-      // Tembak file ke Supabase Storage (NAMA BUCKET SUDAH HURUF KECIL)
       const { data, error } = await supabase.storage
         .from('assets') 
         .upload(filePath, file);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      alert(`✅ MANTAP BRO! File "${file.name}" sukses mendarat di brankas Supabase!`);
+      alert(`✅ MANTAP BRO! File "${file.name}" sukses mendarat di brankas!`);
+      
+      // REFRESH daftar file otomatis biar file yang baru lu upload langsung nongol!
+      fetchFiles();
       
     } catch (error: any) {
       alert(`❌ Yah, gagal upload bro: ${error.message}`);
     } finally {
-      setIsUploading(false); // Matiin status loading
-      // Reset input file biar bisa milih file yang sama lagi kalau mau
+      setIsUploading(false); 
       e.target.value = "";
     }
   };
@@ -119,7 +161,6 @@ export default function AssetsPage() {
           </button>
         ))}
 
-        {/* Input Tambah Kategori Baru */}
         {isAddingCategory ? (
           <div className="flex items-center gap-2 bg-[#1a1f33] border border-emerald-500/50 rounded-full px-2 py-1">
             <input
@@ -131,36 +172,72 @@ export default function AssetsPage() {
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
             />
-            <button 
-              onClick={handleAddCategory}
-              className="text-emerald-400 hover:text-emerald-300 text-sm font-bold px-2"
-            >
-              ✓
-            </button>
-            <button 
-              onClick={() => setIsAddingCategory(false)}
-              className="text-red-400 hover:text-red-300 text-sm font-bold px-2 border-l border-gray-700"
-            >
-              ✕
-            </button>
+            <button onClick={handleAddCategory} className="text-emerald-400 hover:text-emerald-300 text-sm font-bold px-2">✓</button>
+            <button onClick={() => setIsAddingCategory(false)} className="text-red-400 hover:text-red-300 text-sm font-bold px-2 border-l border-gray-700">✕</button>
           </div>
         ) : (
-          <button
-            onClick={() => setIsAddingCategory(true)}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all border border-dashed border-gray-700 text-gray-500 hover:border-emerald-500/50 hover:text-emerald-400 flex items-center gap-1"
-          >
+          <button onClick={() => setIsAddingCategory(true)} className="px-4 py-2 rounded-full text-sm font-medium transition-all border border-dashed border-gray-700 text-gray-500 hover:border-emerald-500/50 hover:text-emerald-400 flex items-center gap-1">
             <span>+</span> Custom
           </button>
         )}
       </div>
 
-      {/* Area Brankas Kosong */}
-      <div className="bg-[#111424] border border-gray-800 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
-        <span className="text-6xl mb-4 opacity-50">📂</span>
-        <h2 className="text-xl font-medium text-white mb-2">Brankas Kosong</h2>
-        <p className="text-gray-500 text-sm">
-          Belum ada file yang diunggah ke kategori "{activeCategory}"
-        </p>
+      {/* AREA TAMPILAN FILE (BRANKAS) */}
+      <div className="bg-[#111424] border border-gray-800 rounded-2xl p-8 min-h-[400px]">
+        {isLoadingFiles ? (
+          // Animasi muter pas narik data
+          <div className="flex flex-col items-center justify-center h-full pt-20">
+            <div className="animate-spin text-4xl mb-4">🔄</div>
+            <p className="text-gray-400">Sedang membuka brankas...</p>
+          </div>
+        ) : files.length === 0 ? (
+          // Tampilan kalau beneran kosong
+          <div className="flex flex-col items-center justify-center h-full pt-20 text-center">
+            <span className="text-6xl mb-4 opacity-50">📂</span>
+            <h2 className="text-xl font-medium text-white mb-2">Brankas Kosong</h2>
+            <p className="text-gray-500 text-sm">
+              Belum ada file yang diunggah ke kategori "{activeCategory}"
+            </p>
+          </div>
+        ) : (
+          // Grid tampilan file yang udah masuk (NYATA BRO!)
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {files.map((file, index) => {
+              // Deteksi ini gambar apa dokumen biasa
+              const isImage = file.name.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+
+              return (
+                <div key={index} className="group relative bg-[#1a1f33] border border-gray-800 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-all">
+                  
+                  {/* Thumbnail / Gambar */}
+                  <div className="h-32 bg-black/40 flex items-center justify-center overflow-hidden">
+                    {isImage ? (
+                      <img src={file.url} alt={file.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                    ) : (
+                      <span className="text-5xl">📄</span>
+                    )}
+                  </div>
+
+                  {/* Info File & Tombol Buka */}
+                  <div className="p-3">
+                    <p className="text-xs text-gray-300 truncate mb-2" title={file.name}>
+                      {file.name}
+                    </p>
+                    <a 
+                      href={file.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-block w-full text-center bg-gray-800 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1.5 rounded transition-all"
+                    >
+                      Buka File
+                    </a>
+                  </div>
+                  
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
