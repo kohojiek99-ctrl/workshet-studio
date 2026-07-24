@@ -27,6 +27,7 @@ export default function RootLayout({
   const navItems = [
     { name: "Dashboard", href: "/", icon: "📊" },
     { name: "Prompts", href: "/prompts", icon: "🧠" },
+    { name: "AI Studio", href: "/generate", icon: "✨" }, // <--- MENU BARU DITAMBAHKAN DI SINI!
     { name: "Projects", href: "/projects", icon: "📋" },
     { name: "Assets", href: "/assets", icon: "📦" },
     { name: "Settings", href: "/settings", icon: "⚙️" },
@@ -49,7 +50,6 @@ export default function RootLayout({
         {/* Navbar Khusus Mobile */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#111424]">
           <div className="flex items-center">
-            {/* Logo untuk layar HP diperbesar */}
             <Image 
               src="/logo.png" 
               alt="Worksheet Studio Logo" 
@@ -74,7 +74,6 @@ export default function RootLayout({
           } md:flex w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex-col justify-between bg-[#111424] shrink-0 transition-all`}
         >
           <div>
-            {/* Logo untuk layar Desktop/Laptop diperbesar */}
             <div className="hidden md:flex items-center mb-10">
               <Image 
                 src="/logo.png" 
