@@ -13,8 +13,6 @@ export default function AssetsPage() {
   ]);
   
   const [activeCategory, setActiveCategory] = useState("Semua");
-  
-  // State untuk fitur nambah kategori custom
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
@@ -23,6 +21,15 @@ export default function AssetsPage() {
       setCategories([...categories, newCategoryName.trim()]);
       setNewCategoryName("");
       setIsAddingCategory(false);
+    }
+  };
+
+  // Fungsi buat nangkep file yang dipilih
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      alert(`🔥 MANTAP BRO!\n\nFile "${file.name}" udah kepilih.\nSiap dilempar ke brankas kategori: "${activeCategory}"\n\n(Tinggal lu masukin fungsi Supabase Upload-nya di kodingan ini)`);
+      // Nanti kodingan supabase.storage.from('ASSETS').upload(...) lu masukin di sini ya bro!
     }
   };
 
@@ -39,10 +46,21 @@ export default function AssetsPage() {
           </p>
         </div>
         
-        {/* Tombol Upload */}
-        <button className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-6 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2">
-          <span>☁️</span> Mengunggah ke Cloud...
-        </button>
+        {/* Tombol Upload yang Udah Aktif */}
+        <div>
+          <input 
+            type="file" 
+            id="upload-asset" 
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <label 
+            htmlFor="upload-asset"
+            className="cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-6 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
+          >
+            <span>☁️</span> Upload File
+          </label>
+        </div>
       </div>
 
       {/* Navigasi Kategori Custom */}
