@@ -9,13 +9,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function AssetsPage() {
-  const [categories, setCategories] = useState([
-    "Semua",
-    "Produk Digital",
-    "Produk Fisik",
-    "Aset TikTok",
-    "Sound Effects",
-  ]);
+  const defaultCategories = ["Semua", "Produk Digital", "Produk Fisik", "Aset TikTok", "Sound Effects"];
+  const [categories, setCategories] = useState(defaultCategories);
   
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -25,24 +20,59 @@ export default function AssetsPage() {
   const [files, setFiles] = useState<any[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 1. Ambil Kategori Custom dari memori browser pas pertama kali load
+  // Load kategori dari memori browser
   useEffect(() => {
     const savedCategories = localStorage.getItem('customCategories');
     if (savedCategories) {
       setCategories(JSON.parse(savedCategories));
+    } else {
+      // Set default kalau kosong
+      setCategories(defaultCategories);
     }
   }, []);
+
+  // Simpan kategori tiap ada perubahan
+  const saveCategoriesToStorage = (newCats: string[]) => {
+    setCategories(newCats);
+    localStorage.setItem('customCategories', JSON.stringify(newCats));
+  };
 
   const handleAddCategory = () => {
     if (newCategoryName.trim() !== "") {
       const updatedCategories = [...categories, newCategoryName.trim()];
-      setCategories(updatedCategories);
-      
-      // Simpan ke memori browser biar gak ilang pas di-refresh
-      localStorage.setItem('customCategories', JSON.stringify(updatedCategories));
-      
+      saveCategoriesToStorage(updatedCategories);
+      setActiveCategory(newCategoryName.trim());
       setNewCategoryName("");
       setIsAddingCategory(false);
+    }
+  };
+
+  // --- FITUR BARU: HAPUS KATEGORI ---
+  const handleDeleteCategory = (catToRemove: string) => {
+    if (catToRemove === "Semua") return;
+    if (!window.confirm(`Bro, yakin mau hapus kategori "${catToRemove}" dari menu? (File lu yang ada di dalam kategori ini nggak akan terhapus kok, cuma menunya aja yang hilang)`)) return;
+    
+    const updatedCategories = categories.filter((cat) => cat !== catToRemove);
+    saveCategoriesToStorage(updatedCategories);
+    
+    // Kalau yang dihapus adalah kategori yang lagi dibuka, pindahin ke "Semua"
+    if (activeCategory === catToRemove) {
+      setActiveCategory("Semua");
+    }
+  };
+
+  // --- FITUR BARU: EDIT KATEGORI ---
+  const handleEditCategory = (oldCatName: string) => {
+    if (oldCatName === "Semua") return;
+    const newName = window.prompt(`Ganti nama kategori "${oldCatName}" jadi apa bro?`, oldCatName);
+    
+    if (!newName || newName.trim() === "" || newName === oldCatName) return;
+    
+    const updatedCategories = categories.map((cat) => (cat === oldCatName ? newName.trim() : cat));
+    saveCategoriesToStorage(updatedCategories);
+    
+    if (activeCategory === oldCatName) {
+      setActiveCategory(newName.trim());
     }
   };
 
@@ -107,26 +137,21 @@ export default function AssetsPage() {
     }
   };
 
-  // --- FITUR BARU: HAPUS FILE ---
   const handleDelete = async (fileName: string) => {
     if (!window.confirm(`Bro, yakin mau hapus file "${fileName}"?`)) return;
-    
     try {
       const filePath = `${activeCategory}/${fileName}`;
       const { error } = await supabase.storage.from('assets').remove([filePath]);
       if (error) throw error;
-      
-      fetchFiles(); // Refresh tampilan
+      fetchFiles(); 
     } catch (error: any) {
       alert(`❌ Gagal hapus: ${error.message}`);
     }
   };
 
-  // --- FITUR BARU: EDIT/RENAME FILE ---
   const handleRename = async (oldName: string) => {
     const ext = oldName.split('.').pop();
     const oldNameWithoutExt = oldName.replace(`.${ext}`, '');
-    
     const newName = window.prompt("Masukkan nama baru (tanpa ekstensi):", oldNameWithoutExt);
     if (!newName || newName.trim() === "" || newName === oldNameWithoutExt) return;
 
@@ -137,14 +162,12 @@ export default function AssetsPage() {
 
       const { error } = await supabase.storage.from('assets').move(oldPath, newPath);
       if (error) throw error;
-      
-      fetchFiles(); // Refresh tampilan
+      fetchFiles(); 
     } catch (error: any) {
       alert(`❌ Gagal ganti nama: ${error.message}`);
     }
   };
 
-  // --- FITUR BARU: DOWNLOAD FILE ---
   const handleDownload = async (fileName: string, url: string) => {
     try {
       const response = await fetch(url);
@@ -158,7 +181,6 @@ export default function AssetsPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      // Fallback kalau fetch di-block sama browser
       window.open(url, '_blank');
     }
   };
@@ -184,19 +206,41 @@ export default function AssetsPage() {
         </div>
       </div>
 
+      {/* AREA NAVIGASI KATEGORI BISA EDIT/HAPUS */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
         {categories.map((cat, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-              activeCategory === cat
-                ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                : "bg-transparent border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white"
-            }`}
-          >
-            {cat}
-          </button>
+          <div key={index} className="flex items-center">
+            <button
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 text-sm font-medium transition-all border ${
+                activeCategory === cat
+                  ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 rounded-l-full"
+                  : "bg-transparent border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white rounded-full"
+              } ${activeCategory === cat && cat !== "Semua" ? "border-r-0" : ""}`}
+            >
+              {cat}
+            </button>
+            
+            {/* Tombol Aksi Muncul Saat Kategori Diklik & Bukan 'Semua' */}
+            {activeCategory === cat && cat !== "Semua" && (
+              <div className="flex items-center bg-emerald-500/10 border border-l-0 border-emerald-500/50 rounded-r-full overflow-hidden">
+                <button 
+                  onClick={() => handleEditCategory(cat)} 
+                  className="px-2 py-2 text-xs text-orange-400 hover:bg-orange-500/20 hover:text-orange-300 transition-all border-l border-emerald-500/30" 
+                  title="Ganti Nama Kategori"
+                >
+                  ✏️
+                </button>
+                <button 
+                  onClick={() => handleDeleteCategory(cat)} 
+                  className="px-2 py-2 text-xs text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border-l border-emerald-500/30" 
+                  title="Hapus Kategori"
+                >
+                  ❌
+                </button>
+              </div>
+            )}
+          </div>
         ))}
 
         {isAddingCategory ? (
@@ -212,6 +256,7 @@ export default function AssetsPage() {
         )}
       </div>
 
+      {/* AREA TAMPILAN FILE */}
       <div className="bg-[#111424] border border-gray-800 rounded-2xl p-8 min-h-[400px]">
         {isLoadingFiles ? (
           <div className="flex flex-col items-center justify-center h-full pt-20">
@@ -248,12 +293,10 @@ export default function AssetsPage() {
                     </p>
                     
                     <div>
-                      {/* Tombol Utama */}
                       <a href={file.url} target="_blank" rel="noopener noreferrer" className="inline-block w-full text-center bg-gray-800 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1.5 rounded transition-all mb-1.5">
                         Buka File
                       </a>
                       
-                      {/* Aksi Tambahan: Download, Edit, Hapus */}
                       <div className="flex gap-1">
                         <button onClick={() => handleDownload(file.name, file.url)} title="Unduh" className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 py-1.5 rounded transition-all flex items-center justify-center text-xs">
                           ⬇️
