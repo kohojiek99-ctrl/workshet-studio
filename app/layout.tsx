@@ -45,14 +45,14 @@ export default function RootLayout({
           {/* Sidebar Kiri */}
           <aside className="w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0">
             <div>
-              {/* Logo Gambar Futuristik */}
-              <div className="p-4 mb-6 flex items-center">
+              {/* Logo Diperbesar Ukurannya */}
+              <div className="px-2 py-4 mb-6 flex items-center">
                 <Image 
                   src="/logo.png" 
                   alt="Worksheet Studio Logo" 
-                  width={240} 
-                  height={60} 
-                  className="h-10 w-auto object-contain" 
+                  width={300} 
+                  height={100} 
+                  className="w-44 h-auto object-contain" 
                   priority
                 />
               </div>
