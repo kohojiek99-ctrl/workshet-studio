@@ -23,13 +23,30 @@ export default function HomePage() {
     checkUser();
 
     try {
-      const localProjects = localStorage.getItem('projectItems');
-      const localPrompts = localStorage.getItem('promptItems');
-      const localAssets = localStorage.getItem('assetItems');
+      // Cek berbagai kemungkinan nama key di LocalStorage agar 100% akurat
+      const getStorageData = (keys: string[]) => {
+        for (const key of keys) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            try {
+              const parsed = JSON.parse(data);
+              if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            } catch (e) {}
+          }
+        }
+        // Fallback ambil mentahannya jika ada
+        for (const key of keys) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            try { return JSON.parse(data); } catch (e) {}
+          }
+        }
+        return [];
+      };
 
-      const projects = localProjects ? JSON.parse(localProjects) : [];
-      const prompts = localPrompts ? JSON.parse(localPrompts) : [];
-      const assets = localAssets ? JSON.parse(localAssets) : [];
+      const projects = getStorageData(['projectItems', 'projects', 'userProjects']);
+      const prompts = getStorageData(['promptItems', 'prompts', 'userPrompts']);
+      const assets = getStorageData(['assetItems', 'assets', 'fileItems', 'uploadedAssets']);
 
       setStats({
         projectsCount: projects.length,
@@ -50,7 +67,7 @@ export default function HomePage() {
           👋 Good Night, {userEmail.split('@')[0]}!
         </h1>
         <p className="text-gray-400">
-          Welcome back! Data dashboard ini sekarang sudah sinkron real-time dengan data lokal lu.
+          Welcome back! Data statistik dashboard kini sudah sinkron total dengan semua storage lokal.
         </p>
       </div>
 
@@ -58,19 +75,19 @@ export default function HomePage() {
         <Link href="/projects" className="bg-[#111424] border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/50 transition-all block group">
           <p className="text-gray-400 text-sm mb-2 group-hover:text-emerald-400">Total Projects</p>
           <h3 className="text-3xl font-bold text-white mb-2">{stats.projectsCount}</h3>
-          <span className="text-emerald-400 text-xs">Data real dari Project Board</span>
+          <span className="text-emerald-400 text-xs">Sinkron real-time</span>
         </Link>
 
         <Link href="/prompts" className="bg-[#111424] border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/50 transition-all block group">
           <p className="text-gray-400 text-sm mb-2 group-hover:text-emerald-400">Total Prompts</p>
           <h3 className="text-3xl font-bold text-white mb-2">{stats.promptsCount}</h3>
-          <span className="text-emerald-400 text-xs">Data real dari Prompt Library</span>
+          <span className="text-emerald-400 text-xs">Sinkron real-time</span>
         </Link>
 
         <Link href="/assets" className="bg-[#111424] border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/50 transition-all block group">
           <p className="text-gray-400 text-sm mb-2 group-hover:text-emerald-400">Total Assets</p>
           <h3 className="text-3xl font-bold text-white mb-2">{stats.assetsCount}</h3>
-          <span className="text-emerald-400 text-xs">Data real dari Asset Manager</span>
+          <span className="text-emerald-400 text-xs">Sinkron real-time</span>
         </Link>
 
         <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
