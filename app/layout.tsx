@@ -2,10 +2,8 @@
 
 import "./globals.css";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { useState } from "react";
 
 export default function RootLayout({
   children,
@@ -14,8 +12,6 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isLoginPage = pathname === "/login";
 
   const handleLogout = async () => {
@@ -36,9 +32,7 @@ export default function RootLayout({
   if (isLoginPage) {
     return (
       <html lang="id">
-        <body className="bg-[#0b0e14] text-white antialiased">
-          {children}
-        </body>
+        <body className="bg-[#0b0e14] text-white antialiased">{children}</body>
       </html>
     );
   }
@@ -47,23 +41,16 @@ export default function RootLayout({
     <html lang="id">
       <body className="bg-[#0b0e14] text-white antialiased">
         <div className="flex min-h-screen bg-[#0b0e14]">
-          
-          {/* Sidebar Kiri Tetap Konsisten */}
+          {/* Sidebar Kiri */}
           <aside className="w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0">
             <div>
-              {/* Logo */}
+              {/* Logo Teks Asli Worksheet Studio */}
               <div className="p-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-                    W
-                  </div>
-                  <span className="text-white font-serif font-bold text-lg tracking-wide">
-                    Worksheet Studio
-                  </span>
-                </div>
+                <h1 className="text-white font-serif font-bold text-lg tracking-wide">
+                  Worksheet Studio
+                </h1>
               </div>
 
-              {/* Menu Navigasi Lengkap */}
               <nav className="flex flex-col gap-2">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
@@ -85,7 +72,6 @@ export default function RootLayout({
               </nav>
             </div>
 
-            {/* Tombol Keluar Studio */}
             <div className="pt-6 border-t border-gray-800">
               <button
                 onClick={handleLogout}
@@ -96,11 +82,9 @@ export default function RootLayout({
             </div>
           </aside>
 
-          {/* Area Konten Utama di Kanan */}
           <main className="flex-1 overflow-y-auto bg-[#0b0e14]">
             {children}
           </main>
-
         </div>
       </body>
     </html>
