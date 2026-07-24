@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// Inisialisasi Supabase Client
+// Pastiin NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY udah ada di .env lu ya bro!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function AssetsPage() {
-  // Daftar kategori bawaan
   const [categories, setCategories] = useState([
     "Semua",
     "Produk Digital",
@@ -15,6 +21,9 @@ export default function AssetsPage() {
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  
+  // State buat ngasih tau kalau lagi proses upload
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleAddCategory = () => {
     if (newCategoryName.trim() !== "") {
@@ -24,12 +33,38 @@ export default function AssetsPage() {
     }
   };
 
-  // Fungsi buat nangkep file yang dipilih
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fungsi ASLI buat upload ke Supabase
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      alert(`🔥 MANTAP BRO!\n\nFile "${file.name}" udah kepilih.\nSiap dilempar ke brankas kategori: "${activeCategory}"\n\n(Tinggal lu masukin fungsi Supabase Upload-nya di kodingan ini)`);
-      // Nanti kodingan supabase.storage.from('ASSETS').upload(...) lu masukin di sini ya bro!
+    if (!file) return;
+
+    setIsUploading(true); // Nyalain status loading
+
+    try {
+      // Bikin nama file unik biar nggak bentrok kalau ada file yang namanya sama
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      // Bikin folder berdasarkan kategori yang dipilih
+      const filePath = `${activeCategory}/${fileName}`;
+
+      // Tembak file ke Supabase Storage (Bucket: ASSETS)
+      const { data, error } = await supabase.storage
+        .from('ASSETS')
+        .upload(filePath, file);
+
+      if (error) {
+        throw error;
+      }
+
+      alert(`✅ MANTAP BRO! File "${file.name}" sukses mendarat di brankas Supabase!`);
+      
+    } catch (error: any) {
+      alert(`❌ Yah, gagal upload bro: ${error.message}`);
+    } finally {
+      setIsUploading(false); // Matiin status loading
+      // Reset input file biar bisa milih file yang sama lagi kalau mau
+      e.target.value = "";
     }
   };
 
@@ -46,19 +81,25 @@ export default function AssetsPage() {
           </p>
         </div>
         
-        {/* Tombol Upload yang Udah Aktif */}
+        {/* Tombol Upload */}
         <div>
           <input 
             type="file" 
             id="upload-asset" 
             className="hidden"
             onChange={handleFileSelect}
+            disabled={isUploading}
           />
           <label 
             htmlFor="upload-asset"
-            className="cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-6 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
+            className={`cursor-pointer px-6 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 ${
+              isUploading 
+              ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed" 
+              : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
+            }`}
           >
-            <span>☁️</span> Upload File
+            <span>{isUploading ? "⏳" : "☁️"}</span> 
+            {isUploading ? "Mengunggah..." : "Upload File"}
           </label>
         </div>
       </div>
