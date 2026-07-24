@@ -8,7 +8,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Fungsi Eksekusi Logout bawaan project lu
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -21,7 +20,6 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-[#111424] border-r border-gray-800 flex flex-col p-6">
-      {/* Bagian Logo */}
       <div className="p-6">
         <h2 className="text-2xl font-serif font-bold text-white tracking-wider">
           WORKSHEET<span className="text-emerald-500">.</span>
@@ -29,7 +27,6 @@ export default function Sidebar() {
         <p className="text-gray-500 text-sm mt-1">Studio Kreatif Pro</p>
       </div>
 
-      {/* Daftar Menu Navigasi (Lengkap dengan AI Studio ✨) */}
       <nav className="flex flex-col gap-2 flex-1 px-4">
         <Link
           href="/"
@@ -49,7 +46,6 @@ export default function Sidebar() {
           <span>🧠</span> Prompts
         </Link>
 
-        {/* MENU BARU AI STUDIO */}
         <Link
           href="/generate"
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
@@ -87,7 +83,6 @@ export default function Sidebar() {
         </Link>
       </nav>
 
-      {/* Tombol Logout Asli */}
       <div className="p-4 border-t border-gray-800">
         <button
           onClick={handleLogout}
