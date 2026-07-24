@@ -1,78 +1,101 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-// Kita pakai file kunci master yang udah lu bikin di folder lib
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function Sidebar() {
+  const pathname = usePathname();
   const router = useRouter();
 
-  // Fungsi Eksekusi Logout
+  // Fungsi Eksekusi Logout bawaan project lu
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
-    
     if (error) {
       console.error("Gagal logout:", error.message);
     } else {
-      router.push("/login"); // Balikin ke halaman login
-      router.refresh(); // Bersihin sisa memori halaman
+      router.push("/login"); 
+      router.refresh(); 
     }
   };
 
   return (
-    <div className="w-64 min-h-screen bg-[#111424] border-r border-gray-800 flex flex-col">
+    <aside className="w-64 min-h-screen bg-[#111424] border-r border-gray-800 flex flex-col p-6">
       {/* Bagian Logo */}
       <div className="p-6">
-        <h2 className="text-2xl font-serif font-bold text-white tracking-wide">
-          WORKSCHET™
+        <h2 className="text-2xl font-serif font-bold text-white tracking-wider">
+          WORKSHEET<span className="text-emerald-500">.</span>
         </h2>
-        <p className="text-gray-500 text-sm mt-1">Studio</p>
+        <p className="text-gray-500 text-sm mt-1">Studio Kreatif Pro</p>
       </div>
 
-      {/* Bagian Menu Navigasi */}
-      <nav className="flex-1 px-4 mt-4 space-y-2">
-        <Link 
-          href="/" 
-          className="block px-4 py-3 text-gray-300 hover:bg-[#1a1f33] hover:text-white rounded-xl transition-all"
+      {/* Daftar Menu Navigasi (Lengkap dengan AI Studio ✨) */}
+      <nav className="flex flex-col gap-2 flex-1 px-4">
+        <Link
+          href="/"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
         >
-          Dashboard
+          <span>📊</span> Dashboard
         </Link>
-        <Link 
-          href="/prompts" 
-          className="block px-4 py-3 text-gray-300 hover:bg-[#1a1f33] hover:text-white rounded-xl transition-all"
+
+        <Link
+          href="/prompts"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/prompts" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
         >
-          Prompts
+          <span>🧠</span> Prompts
         </Link>
-        <Link 
-          href="/projects" 
-          className="block px-4 py-3 text-gray-300 hover:bg-[#1a1f33] hover:text-white rounded-xl transition-all"
+
+        {/* MENU BARU AI STUDIO */}
+        <Link
+          href="/generate"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/generate" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
         >
-          Projects
+          <span>✨</span> AI Studio
         </Link>
-        <Link 
-          href="/assets" 
-          className="block px-4 py-3 text-gray-300 hover:bg-[#1a1f33] hover:text-white rounded-xl transition-all"
+
+        <Link
+          href="/projects"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/projects" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
         >
-          Assets
+          <span>📈</span> Projects
         </Link>
-        <Link 
-          href="/settings" 
-          className="block px-4 py-3 text-gray-300 hover:bg-[#1a1f33] hover:text-white rounded-xl transition-all"
+
+        <Link
+          href="/assets"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/assets" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
         >
-          Settings
+          <span>📦</span> Assets
+        </Link>
+
+        <Link
+          href="/settings"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/settings" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+          }`}
+        >
+          <span>⚙️</span> Settings
         </Link>
       </nav>
 
-      {/* Bagian Bawah (Tombol Logout) */}
+      {/* Tombol Logout Asli */}
       <div className="p-4 border-t border-gray-800">
         <button
           onClick={handleLogout}
-          className="w-full text-left px-4 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-all"
+          className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 py-2.5 rounded-xl text-sm font-medium transition-all"
         >
-          Log Out
+          Keluar Studio
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
