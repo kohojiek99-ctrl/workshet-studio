@@ -4,7 +4,6 @@ import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // Inisialisasi Supabase Client
-// Pastiin NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY udah ada di .env lu ya bro!
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -48,9 +47,9 @@ export default function AssetsPage() {
       // Bikin folder berdasarkan kategori yang dipilih
       const filePath = `${activeCategory}/${fileName}`;
 
-      // Tembak file ke Supabase Storage (Bucket: ASSETS)
+      // Tembak file ke Supabase Storage (NAMA BUCKET SUDAH HURUF KECIL)
       const { data, error } = await supabase.storage
-        .from('ASSETS')
+        .from('assets') 
         .upload(filePath, file);
 
       if (error) {
