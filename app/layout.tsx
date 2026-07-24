@@ -2,6 +2,7 @@
 
 import "./globals.css";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -44,11 +45,16 @@ export default function RootLayout({
           {/* Sidebar Kiri */}
           <aside className="w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0">
             <div>
-              {/* Logo Teks Asli Worksheet Studio */}
-              <div className="p-4 mb-6">
-                <h1 className="text-white font-serif font-bold text-lg tracking-wide">
-                  Worksheet Studio
-                </h1>
+              {/* Logo Gambar Futuristik */}
+              <div className="p-4 mb-6 flex items-center">
+                <Image 
+                  src="/logo.png" 
+                  alt="Worksheet Studio Logo" 
+                  width={240} 
+                  height={60} 
+                  className="h-10 w-auto object-contain" 
+                  priority
+                />
               </div>
 
               <nav className="flex flex-col gap-2">
