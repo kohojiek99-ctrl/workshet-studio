@@ -36,7 +36,7 @@ export default function RootLayout({
   if (isLoginPage) {
     return (
       <html lang="id">
-        <body className="bg-[#111424] text-white antialiased">
+        <body className="bg-[#0b0e14] text-white antialiased">
           {children}
         </body>
       </html>
@@ -45,79 +45,63 @@ export default function RootLayout({
 
   return (
     <html lang="id">
-      <body className="bg-[#11te antialiased flex flex-col md:flex-row min-h-screen">
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#111424]">
-          <div className="flex items-center">
-            <Image 
-              src="/logo.png" 
-              alt="Worksheet Studio Logo" 
-              width={200} 
-              height={80} 
-              className="w-36 h-auto object-contain"
-              priority
-            />
-          </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-gray-400 hover:text-white focus:outline-none text-2xl"
-          >
-            {isMobileMenuOpen ? "✖" : "☰"}
-          </button>
-        </div>
+      <body className="bg-[#0b0e14] text-white antialiased">
+        <div className="flex min-h-screen bg-[#0b0e14]">
+          
+          {/* Sidebar Kiri Tetap Konsisten */}
+          <aside className="w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0">
+            <div>
+              {/* Logo */}
+              <div className="p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
+                    W
+                  </div>
+                  <span className="text-white font-serif font-bold text-lg tracking-wide">
+                    Worksheet Studio
+                  </span>
+                </div>
+              </div>
 
-        <aside
-          className={`${
-            isMobileMenuOpen ? "flex" : "hidden"
-          } md:flex w-full m64 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex-col justify-between bg-[#111424] shrink-0 transition-all`}
-        >
-          <div>
-            <div className="hidden md:flex items-center mb-10">
-              <Image 
-                src="/logo.png" 
-                alt="Worksheet Studio Logo" 
-                width={300} 
-                height={120} 
-                className="w-48 h-auto object-contain -ml-2"
-                priority
-              />
+              {/* Menu Navigasi Lengkap */}
+              <nav className="flex flex-col gap-2">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                        isActive
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/5"
+                          : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
 
-            <nav className="space-y-2">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-[#1a1f33]"
-                    }`}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+            {/* Tombol Keluar Studio */}
+            <div className="pt-6 border-t border-gray-800">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 py-2.5 rounded-xl text-sm font-medium transition-all"
+              >
+                Keluar Studio
+              </button>
+            </div>
+          </aside>
 
-          <div className="pt-4 mt-8 md:mt-0 border-t border-gray-800">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 font-medium py-3 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
-            >
-              <span>🚪</span>
-              <span>Keluar Studio</span>
-            </button>
-          </div>
-        </aside>
+          {/* Area Konten Utama di Kanan */}
+          <main className="flex-1 overflow-y-auto bg-[#0b0e14]">
+            {children}
+          </main>
 
-      <main className="flex-1 overflow-y-auto bg-[#111424] w-full">
-          {children}
-        </main>
+        </div>
       </body>
     </html>
   );
