@@ -27,7 +27,7 @@ export default function RootLayout({
   const navItems = [
     { name: "Dashboard", href: "/", icon: "📊" },
     { name: "Prompts", href: "/prompts", icon: "🧠" },
-    { name: "AI Studio", href: "/generate", icon: "✨" }, // <--- MENU BARU DITAMBAHKAN DI SINI!
+    { name: "AI Studio", href: "/generate", icon: "✨" },
     { name: "Projects", href: "/projects", icon: "📋" },
     { name: "Assets", href: "/assets", icon: "📦" },
     { name: "Settings", href: "/settings", icon: "⚙️" },
@@ -45,9 +45,7 @@ export default function RootLayout({
 
   return (
     <html lang="id">
-      <body className="bg-[#111424] text-white antialiased flex flex-col md:flex-row min-h-screen">
-        
-        {/* Navbar Khusus Mobile */}
+      <body className="bg-[#11te antialiased flex flex-col md:flex-row min-h-screen">
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#111424]">
           <div className="flex items-center">
             <Image 
@@ -67,11 +65,10 @@ export default function RootLayout({
           </button>
         </div>
 
-        {/* Sidebar Kiri */}
         <aside
           className={`${
             isMobileMenuOpen ? "flex" : "hidden"
-          } md:flex w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex-col justify-between bg-[#111424] shrink-0 transition-all`}
+          } md:flex w-full m64 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex-col justify-between bg-[#111424] shrink-0 transition-all`}
         >
           <div>
             <div className="hidden md:flex items-center mb-10">
@@ -85,7 +82,6 @@ export default function RootLayout({
               />
             </div>
 
-            {/* Menu Navigasi */}
             <nav className="space-y-2">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
@@ -108,7 +104,6 @@ export default function RootLayout({
             </nav>
           </div>
 
-          {/* Tombol Logout */}
           <div className="pt-4 mt-8 md:mt-0 border-t border-gray-800">
             <button
               onClick={handleLogout}
@@ -120,8 +115,7 @@ export default function RootLayout({
           </div>
         </aside>
 
-        {/* Area Konten Utama */}
-        <main className="flex-1 overflow-y-auto bg-[#111424] w-full">
+      <main className="flex-1 overflow-y-auto bg-[#111424] w-full">
           {children}
         </main>
       </body>
