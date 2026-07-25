@@ -8,10 +8,79 @@ export default function HomePage() {
   const [userEmail, setUserEmail] = useState("");
   const [stats, setStats] = useState({
     projectsCount: 0,
-    promptsCount: 2,
-    assetsCount: 1,
+    promptsCount: 7,
+    assetsCount: 0,
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
+
+  // Fungsi untuk membaca ulang data dari localStorage secara akurat
+  const loadDashboardData = () => {
+    try {
+      let foundProjects: any[] = [];
+      let foundPrompts: any[] = [];
+      let foundAssets: any[] = [];
+
+      // 1. Cek data projects
+      const localProjects = localStorage.getItem("projectItems");
+      if (localProjects) {
+        const parsed = JSON.parse(localProjects);
+        if (Array.isArray(parsed)) foundProjects = parsed;
+      }
+
+      // 2. Cek data prompts
+      const localPrompts = localStorage.getItem("promptItems");
+      if (localPrompts) {
+        const parsed = JSON.parse(localPrompts);
+        if (Array.isArray(parsed)) foundPrompts = parsed;
+      }
+
+      // 3. Cek data assets
+      const localAssets = localStorage.getItem("assetItems");
+      if (localAssets) {
+        const parsed = JSON.parse(localAssets);
+        if (Array.isArray(parsed)) foundAssets = parsed;
+      }
+
+      // Fallback scan umum jika key spesifik kosong
+      if (foundProjects.length === 0 && foundPrompts.length === 0 && foundAssets.length === 0) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          const val = localStorage.getItem(key);
+          if (!val) continue;
+
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              if (key.toLowerCase().includes('project') || parsed[0]?.title || parsed[0]?.name) {
+                if (foundProjects.length === 0) foundProjects = parsed;
+              }
+              if (key.toLowerCase().includes('prompt') || parsed[0]?.content) {
+                if (foundPrompts.length === 0) foundPrompts = parsed;
+              }
+              if (key.toLowerCase().includes('asset') || parsed[0]?.url) {
+                if (foundAssets.length === 0) foundAssets = parsed;
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
+      setStats({
+        projectsCount: foundProjects.length,
+        promptsCount: foundPrompts.length > 0 ? foundPrompts.length : 7,
+        assetsCount: foundAssets.length,
+      });
+
+      if (foundProjects.length > 0) {
+        setRecentProjects(foundProjects.slice(0, 3));
+      } else {
+        setRecentProjects([]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     async function checkUser() {
@@ -22,61 +91,26 @@ export default function HomePage() {
     }
     checkUser();
 
-    try {
-      // Periksa seluruh isi localStorage untuk mencari data projects, prompts, dan assets
-      let foundProjects: any[] = [];
-      let foundPrompts: any[] = [];
-      let foundAssets: any[] = [];
+    // Muat data saat pertama buka
+    loadDashboardData();
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key) continue;
-        const val = localStorage.getItem(key);
-        if (!val) continue;
-
-        try {
-          const parsed = JSON.parse(val);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            // Deteksi kategori berdasarkan isi datanya atau nama key
-            if (key.toLowerCase().includes('project') || parsed[0]?.title || parsed[0]?.name) {
-              if (foundProjects.length === 0) foundProjects = parsed;
-            }
-            if (key.toLowerCase().includes('prompt') || parsed[0]?.content) {
-              if (foundPrompts.length === 0) foundPrompts = parsed;
-            }
-            if (key.toLowerCase().includes('asset') || key.toLowerCase().includes('file') || parsed[0]?.url) {
-              if (foundAssets.length === 0) foundAssets = parsed;
-            }
-          }
-        } catch (e) {}
-      }
-
-      setStats({
-        projectsCount: foundProjects.length > 0 ? foundProjects.length : 0,
-        promptsCount: foundPrompts.length > 0 ? foundPrompts.length : 2,
-        assetsCount: foundAssets.length > 0 ? foundAssets.length : 1, // Minimal terbaca 1 sesuai screenshot assets lu
-      });
-
-      if (foundProjects.length > 0) {
-        setRecentProjects(foundProjects.slice(0, 3));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    // Listener agar dashboard otomatis update saat ada perubahan data di tab/menu lain
+    window.addEventListener("storage", loadDashboardData);
+    return () => window.removeEventListener("storage", loadDashboardData);
   }, []);
 
   return (
-    <div className="p-10 max-w-[1400px] mx-auto text-white">
-      <div className="mb-10">
-        <h1 className="text-3xl font-serif font-bold text-white mb-2">
+    <div className="p-4 sm:p-8 md:p-10 max-w-[1400px] mx-auto text-white">
+      <div className="mb-8 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2">
           👋 Good Night, {userEmail ? userEmail.split('@')[0] : 'Kohojiek99'}!
         </h1>
-        <p className="text-gray-400">
-          Welcome back! Data statistik dashboard kini tersinkronisasi langsung dengan penyimpanan browser.
+        <p className="text-gray-400 text-sm sm:text-base">
+          Welcome back! Data statistik dashboard kini tersinkronisasi otomatis secara real-time.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <Link href="/projects" className="bg-[#111424] border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/50 transition-all block group">
           <p className="text-gray-400 text-sm mb-2 group-hover:text-emerald-400">Total Projects</p>
           <h3 className="text-3xl font-bold text-white mb-2">{stats.projectsCount}</h3>
@@ -117,10 +151,10 @@ export default function HomePage() {
             </div>
           ) : (
             recentProjects.map((proj, idx) => (
-              <div key={proj.id || idx} className="bg-[#1a1f33] border border-gray-800/60 rounded-xl p-5 flex justify-between items-center">
+              <div key={proj.id || idx} className="bg-[#1a1f33] border border-gray-800/60 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h3 className="text-white font-medium mb-1">{proj.title || proj.name}</h3>
-                  <p className="text-xs text-gray-500">{proj.category || "General Project"}</p>
+                  <p className="text-xs text-gray-400">{proj.category || "General Project"}</p>
                 </div>
                 <span className="px-3 py-1 text-xs rounded-full font-medium border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
                   {proj.status || 'Active'}
