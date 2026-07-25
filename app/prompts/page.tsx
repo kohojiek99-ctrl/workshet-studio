@@ -3,313 +3,397 @@
 import { useState, useEffect } from "react";
 
 export default function PromptsPage() {
-  // --- STATE KATEGORI ---
-  const defaultCategories = ["Semua", "Copywriting", "Video Script", "SEO", "Ide Konten"];
-  const [categories, setCategories] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState("Semua");
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-
-  // --- STATE PROMPT ---
   const [prompts, setPrompts] = useState<any[]>([]);
-  
-  // --- STATE MODAL (Buat ngetik prompt panjang) ---
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [currentPrompt, setCurrentPrompt] = useState({ id: 0, title: "", content: "", category: "" });
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Load data pas pertama kali buka
+  // State untuk form Tambah / Edit Prompt
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("General");
+  const [content, setContent] = useState("");
+
+  // Data 7 Master Prompt Bawaan (Default Templates)
+  const defaultMasterPrompts = [
+    {
+      id: "master-1",
+      title: "1. MASTER PROMPT META ADS (STOP SCROLL)",
+      category: "Meta Ads",
+      content: `Anda adalah Meta Ads Creative Director, Senior Copywriter, Consumer Psychologist, dan Performance Marketing Expert dengan pengalaman lebih dari 20 tahun.
+# TUGAS
+Buatkan iklan Facebook & Instagram Ads yang memiliki Hook Stop Scroll, membangun rasa penasaran, menyentuh pain point audiens, membangun kepercayaan, menawarkan solusi yang kuat, dan menghasilkan Call To Action yang mendorong konversi.
+# INFORMASI PRODUK
+Nama Produk: [JUDUL PRODUK]
+Kategori: [KATEGORI]
+Target Market: [TARGET MARKET]
+Masalah Utama Audiens: [PAIN POINT]
+Keunggulan Produk: [USP]
+Benefit: [BENEFIT]
+Promo: [PROMO]
+Harga: [HARGA]
+Brand Voice: [FRIENDLY / PREMIUM / LUXURY / FUN / PROFESSIONAL]
+Tujuan Iklan: [LEADS / SALES / WHATSAPP / WEBSITE / BRANDING]
+# OUTPUT
+Buatkan:
+1. 10 Stop Scroll Hook
+2. 5 Primary Text
+3. 5 Headline
+4. 5 Description
+5. 5 CTA
+6. Caption Meta Ads
+7. Emotional Trigger
+8. Psychological Trigger
+9. Angle Marketing terbaik
+10. Rekomendasi Visual
+11. Prompt AI Image untuk iklan
+12. Rekomendasi warna dan layout
+13. Saran A/B Testing
+14. Optimasi CTR & Conversion
+Gunakan bahasa Indonesia yang natural, persuasive, tidak berlebihan, dan mengikuti prinsip copywriting modern.
++ TEMPLATE TAMBAHAN:
+1. Caption pendek (soft selling)
+2. Caption panjang (story selling)
+3. Caption hard selling
+4. 30 hashtag relevan (10 populer, 10 niche, 10 long-tail)
+5. Sertakan emoji seperlunya.`
+    },
+    {
+      id: "master-2",
+      title: "2. MASTER PROMPT TIKTOK ADS",
+      category: "TikTok Ads",
+      content: `Anda adalah TikTok Ads Strategist, Viral Content Creator, Copywriter, Storytelling Expert, dan Consumer Psychologist.
+Buatkan konsep TikTok Ads yang mampu menarik perhatian dalam 3 detik pertama, meningkatkan watch time, membangun rasa penasaran, menyampaikan manfaat produk secara natural, dan menghasilkan CTA yang tinggi.
+Informasi Produk:
+- Nama Produk: ...
+- Kategori: ...
+- Target Market: ...
+- Masalah Audiens: ...
+- Keunggulan: ...
+- Benefit: ...
+- Promo: ...
+Output:
+• Hook 3 detik (10 variasi)
+• Script 15 detik, 30 detik, 60 detik
+• Storytelling & Pattern Interrupt
+• CTA & Caption & Hashtag
+• Prompt AI Video & Thumbnail
+• Ide B-roll, Opening & Closing Scene
+• Optimasi Retention
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan (populer, niche, long-tail) & emoji seperlunya.`
+    },
+    {
+      id: "master-3",
+      title: "3. MASTER PROMPT UNIVERSAL",
+      category: "Universal",
+      content: `Anda adalah AI Business Consultant, Marketing Strategist, Creative Director, Brand Consultant, Copywriter, Content Strategist, dan Digital Marketing Expert kelas dunia.
+Sebelum memberikan jawaban, lakukan analisis secara mendalam terhadap tujuan, target market, perilaku audiens, psikologi konsumen, tren industri, positioning brand, dan platform yang digunakan. Berikan solusi yang praktis, kreatif, dan siap diterapkan.
+Informasi:
+- Tujuan: ...
+- Produk/Jasa: ...
+- Target Market: ...
+- Platform: ...
+- Brand: ...
+Output:
+• Analisis & Strategi
+• Ide Konten & Copywriting
+• Caption, CTA & Hashtag
+• Prompt AI Image & Video
+• Angle Marketing & Rekomendasi Funnel
+• KPI & Action Plan
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan & emoji profesional.`
+    },
+    {
+      id: "master-4",
+      title: "4. MASTER PROMPT CAROUSEL INSTAGRAM",
+      category: "Instagram",
+      content: `Anda adalah Instagram Content Strategist dan Creative Director.
+Buatkan konten Carousel Instagram yang edukatif, menarik, mudah dipahami, dan mendorong audiens untuk swipe hingga slide terakhir.
+Informasi:
+- Topik: ...
+- Target Audience: ...
+- Tujuan: ...
+Output:
+• Judul & Hook Slide 1
+• Isi Slide 2–10
+• CTA, Caption & Hashtag
+• Prompt AI Image setiap slide
+• Warna, Font, Layout, Ide ikon & Visual Style
+• Prompt Canva
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan & emoji profesional.`
+    },
+    {
+      id: "master-5",
+      title: "5. MASTER PROMPT PROMOSI MEDIA SOSIAL",
+      category: "Social Media",
+      content: `Anda adalah Social Media Marketing Expert.
+Buatkan materi promosi yang dapat digunakan di Instagram, Facebook, TikTok, Threads, LinkedIn, WhatsApp, dan X.
+Informasi:
+- Produk: ...
+- Target Market: ...
+- Tujuan: ...
+Output:
+• Caption, CTA & Hook
+• Story, Feed, Reels, Shorts
+• Prompt AI Visual & Hashtag
+• Jadwal Posting
+• Variasi Soft Selling & Hard Selling
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan & emoji profesional.`
+    },
+    {
+      id: "master-6",
+      title: "6. MASTER PROMPT PRODUK FISIK UMKM",
+      category: "UMKM",
+      content: `Anda adalah Marketing Consultant khusus UMKM dan Produk Fisik. Analisis produk kemudian buatkan materi promosi yang mampu meningkatkan penjualan.
+Informasi:
+- Produk: ...
+- Kategori: ...
+- Harga: ...
+- Target Market: ...
+- Keunggulan & Benefit: ...
+Output:
+• USP & Value Proposition
+• Headline, Hook, Caption, CTA
+• Script Video, Meta Ads, TikTok Ads, Carousel
+• Prompt AI Image Produk
+• Ide Bundling, Promo, Upselling & Cross Selling
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan & emoji profesional.`
+    },
+    {
+      id: "master-7",
+      title: "7. MASTER PROMPT BANNER • SPANDUK • FLYER",
+      category: "Design",
+      content: `Anda adalah Graphic Designer, Brand Strategist, dan Creative Director. Buatkan konsep desain promosi yang profesional, modern, menarik perhatian, mudah dibaca, dan memiliki hirarki visual yang jelas.
+Informasi:
+- Jenis Media: (Banner / Flyer / Brosur / Sticker / Label / Spanduk / Roll Banner / X Banner / Poster)
+- Nama Brand: ...
+- Produk: ...
+- Target Market: ...
+- Ukuran: ...
+Output:
+• Konsep Desain, Headline, Subheadline, Copywriting, CTA
+• Warna, Font, Layout, Visual Style
+• Prompt AI Image, Canva, Photoshop, Illustrator
+• Rekomendasi Material Cetak, Bleed & Safe Margin
++ TEMPLATE TAMBAHAN:
+1. Caption pendek, panjang, hard selling
+2. 30 hashtag relevan & emoji profesional.`
+    }
+  ];
+
+  // Load prompts dari localStorage saat pertama buka (gabung dengan master prompt)
   useEffect(() => {
-    const savedCats = localStorage.getItem('promptCategories');
-    const savedPrompts = localStorage.getItem('promptItems');
-    
-    setCategories(savedCats ? JSON.parse(savedCats) : defaultCategories);
-    if (savedPrompts) {
-      setPrompts(JSON.parse(savedPrompts));
-    } else {
-      // Data dummy awal biar nggak kosong banget
-      setPrompts([
-        { id: 1, title: "Prompt Hook TikTok", content: "Buatkan 5 hook video TikTok yang memancing rasa penasaran audiens tentang produk [NAMA PRODUK]. Gunakan bahasa gaul anak Jaksel dan beri penekanan pada rasa FOMO (Fear of Missing Out).", category: "Video Script", date: "24 Jul" }
-      ]);
+    try {
+      const localData = localStorage.getItem("promptItems");
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPrompts(parsed);
+          return;
+        }
+      }
+      // Jika kosong, masukkan default master prompts
+      setPrompts(defaultMasterPrompts);
+      localStorage.setItem("promptItems", JSON.stringify(defaultMasterPrompts));
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
-  // Fungsi simpan otomatis ke memori browser
-  const saveCategories = (cats: string[]) => {
-    setCategories(cats);
-    localStorage.setItem('promptCategories', JSON.stringify(cats));
-  };
-  const savePrompts = (newPrompts: any[]) => {
-    setPrompts(newPrompts);
-    localStorage.setItem('promptItems', JSON.stringify(newPrompts));
+  const saveToStorage = (updated: any[]) => {
+    setPrompts(updated);
+    localStorage.setItem("promptItems", JSON.stringify(updated));
   };
 
-  // ==========================================
-  // LOGIKA KATEGORI (Sama persis kayak Assets)
-  // ==========================================
-  const handleAddCategory = () => {
-    if (newCategoryName.trim() !== "") {
-      saveCategories([...categories, newCategoryName.trim()]);
-      setActiveCategory(newCategoryName.trim());
-      setNewCategoryName("");
-      setIsAddingCategory(false);
-    }
-  };
-
-  const handleEditCategory = (oldCatName: string) => {
-    if (oldCatName === "Semua") return;
-    const newName = window.prompt(`Ganti nama kategori "${oldCatName}" jadi apa bro?`, oldCatName);
-    
-    if (!newName || newName.trim() === "" || newName === oldCatName) return;
-    
-    const updatedCategories = categories.map((cat) => (cat === oldCatName ? newName.trim() : cat));
-    saveCategories(updatedCategories);
-    
-    // Update juga kategori di prompt yang udah ada
-    const updatedPrompts = prompts.map(p => p.category === oldCatName ? { ...p, category: newName.trim() } : p);
-    savePrompts(updatedPrompts);
-
-    if (activeCategory === oldCatName) setActiveCategory(newName.trim());
-  };
-
-  const handleDeleteCategory = (catToRemove: string) => {
-    if (catToRemove === "Semua") return;
-    const promptsInCat = prompts.filter(p => p.category === catToRemove);
-    if (promptsInCat.length > 0) {
-      alert(`⚠️ Hapus dulu atau pindahin ${promptsInCat.length} prompt yang ada di kategori ini bro!`);
-      return;
-    }
-    if (!window.confirm(`Yakin mau hapus menu kategori "${catToRemove}"?`)) return;
-    
-    saveCategories(categories.filter((cat) => cat !== catToRemove));
-    if (activeCategory === catToRemove) setActiveCategory("Semua");
-  };
-
-  // ==========================================
-  // LOGIKA PROMPT (Tambah, Edit, Hapus, Copy)
-  // ==========================================
-  const openAddModal = () => {
-    setModalMode("add");
-    setCurrentPrompt({ 
-      id: Date.now(), 
-      title: "", 
-      content: "", 
-      category: activeCategory === "Semua" ? categories[1] : activeCategory // Default kategori
-    });
+  // Handler Buka Modal Tambah Prompt Custom
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    setTitle("");
+    setCategory("General");
+    setContent("");
     setIsModalOpen(true);
   };
 
-  const openEditModal = (promptToEdit: any) => {
-    setModalMode("edit");
-    setCurrentPrompt(promptToEdit);
+  // Handler Buka Modal Edit
+  const handleOpenEdit = (item: any) => {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setCategory(item.category || "General");
+    setContent(item.content);
     setIsModalOpen(true);
   };
 
-  const saveModalPrompt = () => {
-    if (currentPrompt.title.trim() === "" || currentPrompt.content.trim() === "") {
-      alert("Judul dan isi prompt nggak boleh kosong bro!");
-      return;
-    }
+  // Handler Simpan
+  const handleSavePrompt = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) return;
 
-    let updatedPrompts;
-    if (modalMode === "add") {
-      const newPrompt = {
-        ...currentPrompt,
-        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-      };
-      updatedPrompts = [newPrompt, ...prompts];
+    if (editingId) {
+      const updated = prompts.map(p => p.id === editingId ? { ...p, title, category, content } : p);
+      saveToStorage(updated);
     } else {
-      updatedPrompts = prompts.map(p => p.id === currentPrompt.id ? currentPrompt : p);
+      const newPrompt = {
+        id: Date.now().toString(),
+        title,
+        category,
+        content,
+      };
+      saveToStorage([newPrompt, ...prompts]);
     }
 
-    savePrompts(updatedPrompts);
     setIsModalOpen(false);
   };
 
-  const handleDeletePrompt = (id: number, title: string) => {
-    if (window.confirm(`Yakin mau hapus prompt "${title}"?`)) {
-      savePrompts(prompts.filter(p => p.id !== id));
-    }
+  // Handler Hapus Prompt
+  const handleDelete = (id: string) => {
+    const updated = prompts.filter(p => p.id !== id);
+    saveToStorage(updated);
   };
 
-  const handleCopyPrompt = (content: string) => {
-    navigator.clipboard.writeText(content);
-    alert("✅ Mantap! Prompt udah di-copy, tinggal paste di ChatGPT/Claude!");
+  // Handler Copy to Clipboard
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
-
-  // Filter prompt sesuai kategori yang aktif
-  const displayedPrompts = activeCategory === "Semua" 
-    ? prompts 
-    : prompts.filter(p => p.category === activeCategory);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen relative">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+    <div className="p-4 sm:p-8 md:p-10 max-w-[1400px] mx-auto text-white">
+      
+      {/* Header Halaman */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-white mb-2 flex items-center gap-2">
-            Prompt Library 🧠
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2">
+            Prompt Library & Master Templates 🧠
           </h1>
-          <p className="text-gray-400">
-            Simpan semua mantra rahasia ChatGPT dan AI lu di sini biar gampang dicopy.
+          <p className="text-gray-400 text-sm sm:text-base">
+            Gunakan master prompt siap pakai atau buat dan simpan prompt custom buatan lu sendiri.
           </p>
         </div>
-        <button 
-          onClick={openAddModal}
-          className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-6 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
+
+        <button
+          onClick={handleOpenAdd}
+          className="px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 transition-all"
         >
-          <span>+</span> Buat Prompt Baru
+          + Tambah Prompt Baru
         </button>
       </div>
 
-      {/* MENU KATEGORI */}
-      <div className="flex flex-wrap items-center gap-3 mb-8">
-        {categories.map((cat, index) => (
-          <div key={index} className="flex items-center">
-            <button
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 text-sm font-medium transition-all border ${
-                activeCategory === cat
-                  ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 rounded-l-full"
-                  : "bg-transparent border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white rounded-full"
-              } ${activeCategory === cat && cat !== "Semua" ? "border-r-0" : ""}`}
-            >
-              {cat}
-            </button>
-            
-            {activeCategory === cat && cat !== "Semua" && (
-              <div className="flex items-center bg-emerald-500/10 border border-l-0 border-emerald-500/50 rounded-r-full overflow-hidden">
-                <button onClick={() => handleEditCategory(cat)} className="px-2 py-2 text-xs text-orange-400 hover:bg-orange-500/20 hover:text-orange-300 border-l border-emerald-500/30" title="Ganti Nama">✏️</button>
-                <button onClick={() => handleDeleteCategory(cat)} className="px-2 py-2 text-xs text-red-400 hover:bg-red-500/20 hover:text-red-300 border-l border-emerald-500/30" title="Hapus">❌</button>
+      {/* List Prompts */}
+      <div className="grid grid-cols-1 gap-6">
+        {prompts.map((item) => (
+          <div key={item.id} className="bg-[#111424] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-all">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <div>
+                <span className="px-2.5 py-0.5 text-[11px] rounded-full font-medium border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 mb-2 inline-block">
+                  {item.category || "General"}
+                </span>
+                <h3 className="text-white font-bold text-lg">{item.title}</h3>
               </div>
-            )}
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => handleCopy(item.id, item.content)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 transition-all flex items-center gap-1.5"
+                >
+                  {copiedId === item.id ? "✅ Tersalin!" : "📋 Salin Prompt"}
+                </button>
+
+                <button
+                  onClick={() => handleOpenEdit(item)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-medium bg-[#1a1f33] hover:bg-gray-800 border border-gray-700 text-amber-400 transition-all"
+                >
+                  ✏️ Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="px-3 py-2 rounded-xl text-xs font-medium bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 transition-all"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-[#161a2e] border border-gray-800/80 rounded-xl p-4 font-mono text-xs sm:text-sm text-gray-300 whitespace-pre-wrap max-h-48 overflow-y-auto">
+              {item.content}
+            </div>
           </div>
         ))}
-
-        {isAddingCategory ? (
-          <div className="flex items-center gap-2 bg-[#1a1f33] border border-emerald-500/50 rounded-full px-2 py-1">
-            <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nama kategori..." className="bg-transparent text-sm text-white outline-none w-32 px-2" autoFocus onKeyDown={(e) => e.key === "Enter" && handleAddCategory()} />
-            <button onClick={handleAddCategory} className="text-emerald-400 font-bold px-2">✓</button>
-            <button onClick={() => setIsAddingCategory(false)} className="text-red-400 font-bold px-2 border-l border-gray-700">✕</button>
-          </div>
-        ) : (
-          <button onClick={() => setIsAddingCategory(true)} className="px-4 py-2 rounded-full text-sm font-medium transition-all border border-dashed border-gray-700 text-gray-500 hover:border-emerald-500/50 hover:text-emerald-400 flex items-center gap-1">
-            <span>+</span> Custom
-          </button>
-        )}
       </div>
 
-      {/* GRID DAFTAR PROMPT */}
-      <div className="bg-[#111424] border border-gray-800 rounded-2xl p-8 min-h-[400px]">
-        {displayedPrompts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full pt-20 text-center">
-            <span className="text-6xl mb-4 opacity-50">📝</span>
-            <h2 className="text-xl font-medium text-white mb-2">Belum ada Prompt</h2>
-            <p className="text-gray-500 text-sm">Klik tombol "Buat Prompt Baru" di atas bro.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedPrompts.map((prompt) => (
-              <div key={prompt.id} className="group bg-[#1a1f33] border border-gray-800 rounded-xl p-5 hover:border-emerald-500/50 transition-all flex flex-col h-64 relative overflow-hidden">
-                
-                {/* Header Card */}
-                <div className="flex justify-between items-start mb-3">
-                  <span className="text-xs font-medium px-2 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">
-                    {prompt.category}
-                  </span>
-                  <span className="text-xs text-gray-500">{prompt.date}</span>
-                </div>
-                
-                {/* Isi Card */}
-                <h3 className="text-md font-bold text-white mb-2 truncate">{prompt.title}</h3>
-                <p className="text-sm text-gray-400 line-clamp-4 flex-1">
-                  {prompt.content}
-                </p>
-
-                {/* Tombol Aksi (Muncul pas di-hover) */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1a1f33] via-[#1a1f33] to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex gap-2">
-                  <button onClick={() => handleCopyPrompt(prompt.content)} className="flex-[2] bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium transition-all shadow-lg">
-                    📋 Copy Prompt
-                  </button>
-                  <button onClick={() => openEditModal(prompt)} title="Edit" className="flex-1 bg-gray-800 hover:bg-orange-500/20 text-orange-400 py-2 rounded-lg text-sm transition-all border border-gray-700 hover:border-orange-500/50">
-                    ✏️
-                  </button>
-                  <button onClick={() => handleDeletePrompt(prompt.id, prompt.title)} title="Hapus" className="flex-1 bg-gray-800 hover:bg-red-500/20 text-red-400 py-2 rounded-lg text-sm transition-all border border-gray-700 hover:border-red-500/50">
-                    🗑️
-                  </button>
-                </div>
-                
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* POP-UP MODAL (Buat Ngetik / Edit Prompt) */}
+      {/* Modal Tambah / Edit Prompt */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-[#111424] border border-gray-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
-            {/* Header Modal */}
-            <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-[#1a1f33]">
-              <h3 className="text-lg font-bold text-white">
-                {modalMode === "add" ? "✨ Buat Prompt Baru" : "✏️ Edit Prompt"}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
-            </div>
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 w-full max-w-2xl text-white my-8">
+            <h2 className="text-lg font-bold mb-4">
+              {editingId ? "Edit Prompt" : "Tambah Prompt Baru"}
+            </h2>
             
-            {/* Body Modal */}
-            <div className="p-6 flex flex-col gap-5">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Judul Prompt</label>
-                <input 
-                  type="text" 
-                  value={currentPrompt.title}
-                  onChange={(e) => setCurrentPrompt({...currentPrompt, title: e.target.value})}
-                  placeholder="Misal: Hook Video TikTok Fomo"
-                  className="w-full bg-[#1a1f33] border border-gray-700 text-white px-4 py-3 rounded-xl outline-none focus:border-emerald-500 transition-colors"
-                />
+            <form onSubmit={handleSavePrompt} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Judul Prompt</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Contoh: Master Prompt Custom..."
+                    required
+                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
+                  <input
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Contoh: Meta Ads / Copywriting"
+                    required
+                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
-                <select 
-                  value={currentPrompt.category}
-                  onChange={(e) => setCurrentPrompt({...currentPrompt, category: e.target.value})}
-                  className="w-full bg-[#1a1f33] border border-gray-700 text-white px-4 py-3 rounded-xl outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
+                <label className="block text-xs font-medium text-gray-400 mb-1">Isi Master Prompt</label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Tuliskan isi master prompt di sini..."
+                  rows={10}
+                  required
+                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none focus:border-emerald-500 resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all"
                 >
-                  {categories.filter(c => c !== "Semua").map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-lg shadow-emerald-500/20"
+                >
+                  Simpan Prompt
+                </button>
               </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Isi Prompt</label>
-                <textarea 
-                  value={currentPrompt.content}
-                  onChange={(e) => setCurrentPrompt({...currentPrompt, content: e.target.value})}
-                  placeholder="Ketik prompt AI kamu di sini..."
-                  rows={6}
-                  className="w-full bg-[#1a1f33] border border-gray-700 text-white px-4 py-3 rounded-xl outline-none focus:border-emerald-500 transition-colors resize-none"
-                />
-              </div>
-            </div>
-            
-            {/* Footer Modal */}
-            <div className="px-6 py-4 border-t border-gray-800 bg-[#1a1f33] flex justify-end gap-3">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
-              >
-                Batal
-              </button>
-              <button 
-                onClick={saveModalPrompt}
-                className="px-5 py-2.5 rounded-xl font-medium bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 transition-all"
-              >
-                Simpan Prompt
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
