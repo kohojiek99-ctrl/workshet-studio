@@ -45,7 +45,7 @@ export default function RootLayout({
       <body className="bg-[#0b0e14] text-white antialiased">
         <div className="min-h-screen bg-[#0b0e14] flex flex-col md:flex-row">
           
-          {/* Mobile Top Navbar (Hanya muncul di HP/Tablet kecil) */}
+          {/* Mobile Top Navbar */}
           <div className="md:hidden flex items-center justify-between bg-[#111424] border-b border-gray-800 p-4 sticky top-0 z-50">
             <div className="flex items-center">
               <Image 
@@ -59,16 +59,16 @@ export default function RootLayout({
             </div>
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-white p-2 rounded-xl bg-gray-800/80 hover:bg-gray-800 text-sm font-medium flex items-center gap-1.5 border border-gray-700"
+              className="text-white px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-medium flex items-center gap-1.5 border border-gray-700"
             >
               <span>{isSidebarOpen ? "✕ Tutup" : "☰ Menu"}</span>
             </button>
           </div>
 
-          {/* Sidebar Kiri (Desktop: Permanen, Mobile: Toggle Drawer) */}
+          {/* Sidebar Kiri (Desktop & Mobile Drawer dengan Z-Index Aman) */}
           <aside className={`
-            fixed md:static inset-y-0 left-0 z-45 w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0 transition-transform duration-300 ease-in-out
-            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+            fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#111424] border-r border-gray-800 flex flex-col p-6 justify-between shrink-0 transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? "translate-x-0 pt-16 md:pt-6" : "-translate-x-full md:translate-x-0"}
           `}>
             <div>
               {/* Logo Desktop */}
@@ -83,7 +83,7 @@ export default function RootLayout({
                 />
               </div>
 
-              <nav className="flex flex-col gap-2 mt-4 md:mt-0">
+              <nav className="flex flex-col gap-2 mt-2 md:mt-0">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
                   return (
@@ -115,11 +115,11 @@ export default function RootLayout({
             </div>
           </aside>
 
-          {/* Overlay gelap di belakang menu HP saat sidebar dibuka */}
+          {/* Overlay Gelap */}
           {isSidebarOpen && (
             <div 
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/70 z-40 md:hidden backdrop-blur-sm"
             />
           )}
 
