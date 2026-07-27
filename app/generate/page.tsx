@@ -5,11 +5,9 @@ import { useState, useEffect } from "react";
 export default function GeneratePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("master-8");
   const [promptInput, setPromptInput] = useState("");
-  const [aiOutput, setAiOutput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [savedPrompts, setSavedPrompts] = useState<any[]>([]);
   
-  // State untuk efek Tombol Copy
+  // State untuk efek Animasi Salin
   const [isCopied, setIsCopied] = useState(false);
 
   // State Form Interaktif Umum
@@ -96,21 +94,7 @@ PROJECT INFORMATION:
     }
   ];
 
-  // Load Templates: Ambil default & coba ambil data custom dari localStorage (Koneksi ke halaman Prompts)
   useEffect(() => {
-    try {
-      const localData = localStorage.getItem("custom_prompts"); // Sesuaikan nama key dengan yang ada di halaman Prompts lu
-      if (localData) {
-        const parsedCustom = JSON.parse(localData);
-        if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
-          setSavedPrompts([...defaultTemplates, ...parsedCustom]);
-          return;
-        }
-      }
-    } catch (error) {
-      console.log("Gagal load custom prompts", error);
-    }
-    // Jika tidak ada di local storage, pakai default saja
     setSavedPrompts(defaultTemplates);
   }, []);
 
@@ -180,7 +164,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
     setPromptInput(result);
   };
 
-  // Efek Real-time Otomatis
   useEffect(() => {
     const currentActiveTemplate = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7] || defaultTemplates[7];
     updatePromptText(currentActiveTemplate);
@@ -194,29 +177,18 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
   const isVideoMode = currentTemplateObj?.type === "video";
   const isImageMode = currentTemplateObj?.type === "image";
 
-  // Dummy fungsi Generate AI (Tetap seperti sebelumnya)
-  const handleGenerateAI = async () => {
-    setLoading(true);
-    setAiOutput("Sedang memproses AI, mohon tunggu sebentar...");
-    try {
-      setTimeout(() => {
-        setAiOutput(`✨ [HASIL GENERATE AI - SIAP PAKAI]\n\n1. Analisis & Konsep Utama:\nBerhasil memproses materi untuk "${productName || 'Produk'}" menggunakan ${currentTemplateObj.title}.\n\n${isVideoMode ? `- Durasi Video: ${videoDuration}\n- Visual Style: ${visualStyle}\n- Format: ${videoFormat}` : ''}\n${isImageMode ? `- Referensi Foto: ${imageUrl || 'Menggunakan foto default'}\n- Style Visual: ${visualStyle}` : ''}\n\n2. Hasil Eksekusi:\nSeluruh naskah, struktur, dan prompt AI telah disusun secara profesional dalam Bahasa Indonesia.\n\n*Catatan: Kamu bisa langsung mengedit teks ini!`);
-        setLoading(false);
-      }, 1500);
-    } catch (err) {
-      setAiOutput("Terjadi kesalahan saat memproses AI.");
-      setLoading(false);
-    }
-  };
-
-  // 🔥 FUNGSI COPY TO CLIPBOARD
-  const handleCopyOutput = () => {
-    if (!aiOutput) return;
-    navigator.clipboard.writeText(aiOutput);
+  // 🚀 FUNGSI UTAMA: SALIN PROMPT DAN OTOMATIS BUKA CUSTOM GPT PROMPTCINEMA LU
+  const handleCopyAndOpenGPT = () => {
+    if (!promptInput) return;
+    
+    // 1. Salin teks ke clipboard
+    navigator.clipboard.writeText(promptInput);
     setIsCopied(true);
-    setTimeout(() => {
-      setIsCopied(false);
-    }, 2000); // Pesan "Tersalin!" hilang setelah 2 detik
+    setTimeout(() => setIsCopied(false), 2500);
+
+    // 2. Membuka Custom GPT PromptCinema Studio™ Pro di tab baru browser
+    const customGPTUrl = "https://chatgpt.com/g/g-6a51bd07e8a081918f285736213bdf14-promptcinema-studiotm-pro"; 
+    window.open(customGPTUrl, "_blank");
   };
 
   return (
@@ -226,13 +198,13 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
           AI Studio & Master Generator ✨
         </h1>
         <p className="text-gray-400 text-sm">
-          Pilih master prompt sesuai kebutuhan (Copywriting, Foto Produk, atau Video Storyboard) dan form akan menyesuaikan otomatis.
+          Isi form interaktif di bawah, sistem akan meracik Master Prompt secara instan untuk dieksekusi di Custom GPT eksklusif Anda.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* KOLOM KIRI: MASTER PROMPT & FORM DINAMIS */}
+        {/* KOLOM KIRI: FORM & MASTER PROMPT PILIHAN */}
         <div className="lg:col-span-6 space-y-6">
           
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
@@ -257,7 +229,7 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
 
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-200">2. Isi Detail Sesuai Mode Aktif</h3>
+              <h3 className="text-sm font-bold text-gray-200">2. Isi Detail Sesuai Kebutuhan</h3>
               <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-bold uppercase">
                 Mode: {currentTemplateObj?.category || "Unknown"}
               </span>
@@ -408,52 +380,32 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
 
         </div>
 
-        {/* KOLOM KANAN: PREVIEW PROMPT & HASIL AI */}
+        {/* KOLOM KANAN: PREVIEW MASTER PROMPT & TOMBOL EKSEKUSI KE CUSTOM GPT */}
         <div className="lg:col-span-6 space-y-6 flex flex-col">
           
-          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-gray-200 mb-3">3. Preview Master Prompt</h3>
+          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-200">3. Hasil Racikan Master Prompt</h3>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Siap Salin & Eksekusi</span>
+            </div>
+            
             <textarea
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
-              rows={10}
-              className="w-full bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 outline-none focus:border-emerald-500 resize-none"
+              rows={14}
+              className="w-full bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 outline-none focus:border-emerald-500 resize-none mb-4"
             />
-            <button
-              onClick={handleGenerateAI}
-              disabled={loading}
-              className="w-full mt-4 py-3 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
-            >
-              {loading ? "✨ Memproses AI..." : "✨ Generate Sekarang"}
-            </button>
-          </div>
 
-          {/* KOTAK HASIL OUTPUT AI YANG BISA DI-EDIT DAN DI-COPY */}
-          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-gray-200">Hasil Output AI</h3>
-              
-              {/* TOMBOL COPY */}
-              <button
-                onClick={handleCopyOutput}
-                disabled={!aiOutput} // Disable kalau output masih kosong
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isCopied
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                    : "bg-[#1a1f33] text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500"
-                } ${!aiOutput && "opacity-50 cursor-not-allowed"}`}
-              >
-                {isCopied ? "✅ Tersalin!" : "📋 Salin Hasil"}
-              </button>
-            </div>
-            
-            {/* TEXTAREA AGAR HASIL AI BISA DI-EDIT USER */}
-            <textarea
-              value={aiOutput}
-              onChange={(e) => setAiOutput(e.target.value)}
-              placeholder="Hasil jawaban AI akan muncul di sini... Setelah muncul, kamu bisa langsung mengetik dan mengedit teks di kotak ini."
-              className="w-full flex-1 min-h-[200px] bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 whitespace-pre-wrap outline-none focus:border-emerald-500 resize-none"
-            />
+            {/* TOMBOL UTAMA: SALIN DAN LANGSUNG BUKA CUSTOM GPT PROMPTCINEMA */}
+            <button
+              onClick={handleCopyAndOpenGPT}
+              className="w-full py-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              {isCopied ? "✅ Master Prompt Tersalin & Membuka GPTs..." : "🚀 Salin Master Prompt & Buka PromptCinema Pro"}
+            </button>
+            <p className="text-center text-[11px] text-gray-400 mt-2">
+              💡 Klik tombol di atas untuk menyalin prompt secara otomatis sekaligus membuka Custom GPT PromptCinema Studio™ Pro Anda di tab baru.
+            </p>
           </div>
 
         </div>
