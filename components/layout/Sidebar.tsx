@@ -1,95 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Gagal logout:", error.message);
-    } else {
-      router.push("/login"); 
-      router.refresh(); 
-    }
-  };
+  const menuItems = [
+    { name: "Dashboard", href: "/", icon: "📊" },
+    { name: "Projects", href: "/projects", icon: "📁" },
+    { name: "Prompts", href: "/prompts", icon: "💡" },
+    { name: "Storyboard Studio", href: "/storyboard", icon: "🎬" },
+    { name: "Assets", href: "/assets", icon: "🎨" },
+    { name: "Generate", href: "/generate", icon: "✨" },
+    { name: "Chat", href: "/chat", icon: "💬" },
+    { name: "Settings", href: "/settings", icon: "⚙️" },
+  ];
 
   return (
-    <aside className="w-64 min-h-screen bg-[#111424] border-r border-gray-800 flex flex-col p-6">
-      <div className="p-6">
-        <h2 className="text-2xl font-serif font-bold text-white tracking-wider">
-          WORKSHEET<span className="text-emerald-500">.</span>
-        </h2>
-        <p className="text-gray-500 text-sm mt-1">Studio Kreatif Pro</p>
+    <aside className="w-64 bg-[#0d0f1a] border-r border-gray-800 flex flex-col h-screen p-6 sticky top-0">
+      {/* Logo / Brand */}
+      <div className="mb-8">
+        <h1 className="text-xl font-bold text-white tracking-wider">
+          WORKSHEET <span className="text-emerald-400">STUDIO</span>
+        </h1>
+        <p className="text-xs text-gray-500 mt-1">AI Creator Workspace</p>
       </div>
 
-      <nav className="flex flex-col gap-2 flex-1 px-4">
-        <Link
-          href="/"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>📊</span> Dashboard
-        </Link>
-
-        <Link
-          href="/prompts"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/prompts" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>🧠</span> Prompts
-        </Link>
-
-        <Link
-          href="/generate"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/generate" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>✨</span> AI Studio
-        </Link>
-
-        <Link
-          href="/projects"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/projects" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>📈</span> Projects
-        </Link>
-
-        <Link
-          href="/assets"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/assets" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>📦</span> Assets
-        </Link>
-
-        <Link
-          href="/settings"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/settings" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-          }`}
-        >
-          <span>⚙️</span> Settings
-        </Link>
+      {/* Navigation Links */}
+      <nav className="flex flex-col gap-2 flex-1">
+        {menuItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-500/10"
+                  : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+              }`}
+            >
+              <span className="text-base">{item.icon}</span>
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 py-2.5 rounded-xl text-sm font-medium transition-all"
-        >
-          Keluar Studio
-        </button>
+      {/* Footer Sidebar */}
+      <div className="pt-4 border-t border-gray-800 text-xs text-gray-500 text-center">
+        v2.6 Pro Edition
       </div>
     </aside>
   );
