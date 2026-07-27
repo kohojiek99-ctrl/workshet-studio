@@ -13,7 +13,7 @@ export default function PromptsPage() {
   const [category, setCategory] = useState("General");
   const [content, setContent] = useState("");
 
-  // Data 7 Master Prompt Bawaan (Default Templates)
+  // Data 8 Master Prompt Bawaan (7 Prompt Lama + 1 Prompt Baru Storyboard Video Mode)
   const defaultMasterPrompts = [
     {
       id: "master-1",
@@ -187,27 +187,79 @@ Output:
 + TEMPLATE TAMBAHAN:
 1. Caption pendek, panjang, hard selling
 2. 30 hashtag relevan & emoji profesional.`
+    },
+    {
+      id: "master-8",
+      title: "8. MASTER PROMPT STORYBOARD VIDEO MODE™",
+      category: "AI Video",
+      content: `[AI Cinematic Storyboard Engine]
+PROJECT INFORMATION:
+- Topik: ...
+- Target Audience: ...
+- Tujuan (Brand Awareness / Engagement / Leads / Sales / Edukasi / Product Launch): ...
+- Platform (TikTok / Instagram Reels / YouTube Shorts / YouTube / Facebook / LinkedIn): ...
+- Durasi Video (15 Detik / 30 Detik / 60 Detik / 3 Menit): ...
+- Informasi Tambahan: ...
+
+CONTENT PRESET (Pilih salah satu):
+Viral Content / Soft Selling / Hard Selling / Storytelling / Product Demo / Educational / Before vs After / Problem Solution / Testimonial / Cinematic Brand Film / Faceless Video / AI Showcase / Launch Campaign
+
+VIDEO FORMAT (Pilih salah satu):
+Talking Head / Cinematic / UGC / Screen Recording / Motion Graphic / Interview / Podcast Clip / Documentary / Product Showcase
+
+VISUAL STYLE (Pilih salah satu):
+Apple Style / Modern SaaS / Luxury / Minimalist / Dark Premium / Futuristic / Documentary / Corporate
+
+BRAND PERSONALITY (Pilih salah satu):
+Professional / Friendly / Luxury / Premium / Elegant / Modern / Innovative / Bold / Minimalist / Futuristic / Inspirational / Educational
+
+CTA (Pilih salah satu):
+Follow / Komentar / Klik Link / Download / Daftar / Beli Sekarang
+
+# ROLE
+Anda adalah AI Creative Director profesional yang menggabungkan keahlian sebagai Creative Director, Commercial Director, Film Director, Marketing Strategist, Copywriter, Storytelling Expert, Cinematographer, Video Editor, Motion Designer, dan AI Video Prompt Engineer.
+Tujuan Anda adalah mengubah informasi sederhana menjadi storyboard video premium berbahasa Indonesia yang siap diproduksi dengan standar agensi kreatif kelas dunia.
+
+# OUTPUT
+1. Creative Brief (Big Idea, Marketing Objective, Core Message, Target Emotion, Target Audience Insight, Hook Recommendation, Visual Direction, Storytelling Style)
+2. Story Structure (Alur hook, problem, solution, transformation, CTA)
+3. Storyboard Lengkap per Scene (Nomor scene, objective, voice over, dialog, screen text, visual description, camera angle, movement, lens, lighting, composition, ekspresi karakter, transisi, sound effect, rekomendasi musik)
+4. AI Video Prompt (Prompt ultra-detail siap pakai untuk Google Veo, Kling AI, Runway, Luma AI, Pika, Hailuo AI mencakup subject, action, environment, camera, lighting, mood, color palette, cinematic style, dll)
+5. Editing Direction (Opening style, editing pace, cut style, subtitle, motion graphic, zoom, B-roll, music, sound FX, color grading, ending style)
+6. CTA Ending yang kuat sesuai tujuan video.`
     }
   ];
 
-  // Load prompts dari localStorage saat pertama buka (gabung dengan master prompt)
+  // Load prompts dari localStorage saat pertama buka (pastikan master prompt ikut ter-update)
   useEffect(() => {
     try {
       const localData = localStorage.getItem("promptItems");
       if (localData) {
         const parsed = JSON.parse(localData);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setPrompts(parsed);
+          // Gabungkan atau pastikan master prompt 1-8 selalu ada
+          setAssetsAndPrompts(parsed);
           return;
         }
       }
-      // Jika kosong, masukkan default master prompts
       setPrompts(defaultMasterPrompts);
       localStorage.setItem("promptItems", JSON.stringify(defaultMasterPrompts));
     } catch (e) {
       console.error(e);
     }
   }, []);
+
+  const setAssetsAndPrompts = (parsed: any[]) => {
+    // Cek apakah master-8 sudah ada, jika belum masukkan secara aman tanpa hapus custom user
+    const hasMaster8 = parsed.some((p: any) => p.id === "master-8");
+    if (!hasMaster8) {
+      const merged = [defaultMasterPrompts[7], ...parsed];
+      setPrompts(merged);
+      localStorage.setItem("promptItems", JSON.stringify(merged));
+    } else {
+      setPrompts(parsed);
+    }
+  };
 
   const saveToStorage = (updated: any[]) => {
     setPrompts(updated);
