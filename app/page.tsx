@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
   const [userEmail, setUserEmail] = useState("");
+  const [greeting, setGreeting] = useState("Good Morning");
   const [stats, setStats] = useState({
     projectsCount: 0,
     promptsCount: 7,
@@ -13,35 +14,47 @@ export default function HomePage() {
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
 
-  // Fungsi untuk membaca ulang data dari localStorage secara akurat
+  // Fungsi untuk menentukan sapaan berdasarkan jam real-time
+  const updateGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 12) {
+      setGreeting("Good Morning");
+    } else if (hour >= 12 && hour < 15) {
+      setGreeting("Good Afternoon");
+    } else if (hour >= 15 && hour < 18) {
+      setGreeting("Good Late Afternoon");
+    } else if (hour >= 18 && hour < 22) {
+      setGreeting("Good Evening");
+    } else {
+      setGreeting("Good Night");
+    }
+  };
+
+  // Fungsi untuk membaca ulang data dari localStorage
   const loadDashboardData = () => {
     try {
       let foundProjects: any[] = [];
       let foundPrompts: any[] = [];
       let foundAssets: any[] = [];
 
-      // 1. Cek data projects
       const localProjects = localStorage.getItem("projectItems");
       if (localProjects) {
         const parsed = JSON.parse(localProjects);
         if (Array.isArray(parsed)) foundProjects = parsed;
       }
 
-      // 2. Cek data prompts
       const localPrompts = localStorage.getItem("promptItems");
       if (localPrompts) {
         const parsed = JSON.parse(localPrompts);
         if (Array.isArray(parsed)) foundPrompts = parsed;
       }
 
-      // 3. Cek data assets
       const localAssets = localStorage.getItem("assetItems");
       if (localAssets) {
         const parsed = JSON.parse(localAssets);
         if (Array.isArray(parsed)) foundAssets = parsed;
       }
 
-      // Fallback scan umum jika key spesifik kosong
       if (foundProjects.length === 0 && foundPrompts.length === 0 && foundAssets.length === 0) {
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -91,10 +104,11 @@ export default function HomePage() {
     }
     checkUser();
 
-    // Muat data saat pertama buka
+    // Jalankan sapaan dan muat data
+    updateGreeting();
     loadDashboardData();
 
-    // Listener agar dashboard otomatis update saat ada perubahan data di tab/menu lain
+    // Listener sync data antar tab/menu
     window.addEventListener("storage", loadDashboardData);
     return () => window.removeEventListener("storage", loadDashboardData);
   }, []);
@@ -103,10 +117,10 @@ export default function HomePage() {
     <div className="p-4 sm:p-8 md:p-10 max-w-[1400px] mx-auto text-white">
       <div className="mb-8 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2">
-          👋 Good Night, {userEmail ? userEmail.split('@')[0] : 'Kohojiek99'}!
+          👋 {greeting}, {userEmail ? userEmail.split('@')[0] : 'Kohojiek99'}!
         </h1>
         <p className="text-gray-400 text-sm sm:text-base">
-          Welcome back! Data statistik dashboard kini tersinkronisasi otomatis secara real-time.
+          Welcome back! Sapaan otomatis menyesuaikan waktu real-time dan data tersinkronisasi.
         </p>
       </div>
 
