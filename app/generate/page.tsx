@@ -8,6 +8,9 @@ export default function GeneratePage() {
   const [aiOutput, setAiOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedPrompts, setSavedPrompts] = useState<any[]>([]);
+  
+  // State untuk efek Tombol Copy
+  const [isCopied, setIsCopied] = useState(false);
 
   // State Form Interaktif Umum
   const [productName, setProductName] = useState("");
@@ -26,7 +29,7 @@ export default function GeneratePage() {
   const [videoFormat, setVideoFormat] = useState("Cinematic");
   const [visualStyle, setVisualstyle] = useState("Apple Style");
 
-  // State Khusus Foto / Gambar (Upload Foto Sendiri)
+  // State Khusus Foto / Gambar
   const [imageUrl, setImageUrl] = useState("");
 
   const defaultTemplates = [
@@ -93,15 +96,26 @@ PROJECT INFORMATION:
     }
   ];
 
+  // Load Templates: Ambil default & coba ambil data custom dari localStorage (Koneksi ke halaman Prompts)
   useEffect(() => {
+    try {
+      const localData = localStorage.getItem("custom_prompts"); // Sesuaikan nama key dengan yang ada di halaman Prompts lu
+      if (localData) {
+        const parsedCustom = JSON.parse(localData);
+        if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
+          setSavedPrompts([...defaultTemplates, ...parsedCustom]);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log("Gagal load custom prompts", error);
+    }
+    // Jika tidak ada di local storage, pakai default saja
     setSavedPrompts(defaultTemplates);
-    // Kita set default-nya master-8 tanpa panggil updatePromptText di sini, 
-    // karena akan di-handle oleh useEffect otomatis di bawah.
   }, []);
 
   const handleSelectTemplate = (item: any) => {
     setSelectedTemplate(item.id);
-    // Tidak perlu updatePromptText manual di sini, akan otomatis ketarik
   };
 
   const updatePromptText = (item: any) => {
@@ -166,42 +180,43 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
     setPromptInput(result);
   };
 
-  // =====================================================================
-  // 🔥 INI KODE TAMBAHANNYA: Agar Otomatis Real-time Saat Ngetik Form
-  // =====================================================================
+  // Efek Real-time Otomatis
   useEffect(() => {
-    // Cari template yang lagi aktif
-    const currentActiveTemplate = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7];
-    
-    // Tiap kali ada perubahan di state form atau pilihan template, 
-    // update teks pratinjau otomatis!
+    const currentActiveTemplate = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7] || defaultTemplates[7];
     updatePromptText(currentActiveTemplate);
-    
-  // List semua state yang harus dipantau. Kalau salah satu berubah, useEffect ini jalan.
   }, [
     selectedTemplate, savedPrompts, productName, targetMarket, painPoint, 
     usp, platform, goal, brandVoice, cta, additionalInfo, videoDuration, 
     contentPreset, videoFormat, visualStyle, imageUrl
   ]);
-  // =====================================================================
 
-  // Cek Tipe Master Prompt yang Aktif Saat Ini untuk UI
   const currentTemplateObj = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7] || defaultTemplates[7];
-  const isVideoMode = currentTemplateObj.type === "video";
-  const isImageMode = currentTemplateObj.type === "image";
+  const isVideoMode = currentTemplateObj?.type === "video";
+  const isImageMode = currentTemplateObj?.type === "image";
 
+  // Dummy fungsi Generate AI (Tetap seperti sebelumnya)
   const handleGenerateAI = async () => {
     setLoading(true);
     setAiOutput("Sedang memproses AI, mohon tunggu sebentar...");
     try {
       setTimeout(() => {
-        setAiOutput(`✨ [HASIL GENERATE AI - SIAP PAKAI]\n\n1. Analisis & Konsep Utama:\nBerhasil memproses materi untuk "${productName || 'Produk'}" menggunakan ${currentTemplateObj.title}.\n\n${isVideoMode ? `- Durasi Video: ${videoDuration}\n- Visual Style: ${visualStyle}\n- Format: ${videoFormat}` : ''}\n${isImageMode ? `- Referensi Foto: ${imageUrl || 'Menggunakan foto default'}\n- Style Visual: ${visualStyle}` : ''}\n\n2. Hasil Eksekusi:\nSeluruh naskah, struktur, dan prompt AI telah disusun secara profesional dalam Bahasa Indonesia.`);
+        setAiOutput(`✨ [HASIL GENERATE AI - SIAP PAKAI]\n\n1. Analisis & Konsep Utama:\nBerhasil memproses materi untuk "${productName || 'Produk'}" menggunakan ${currentTemplateObj.title}.\n\n${isVideoMode ? `- Durasi Video: ${videoDuration}\n- Visual Style: ${visualStyle}\n- Format: ${videoFormat}` : ''}\n${isImageMode ? `- Referensi Foto: ${imageUrl || 'Menggunakan foto default'}\n- Style Visual: ${visualStyle}` : ''}\n\n2. Hasil Eksekusi:\nSeluruh naskah, struktur, dan prompt AI telah disusun secara profesional dalam Bahasa Indonesia.\n\n*Catatan: Kamu bisa langsung mengedit teks ini!`);
         setLoading(false);
       }, 1500);
     } catch (err) {
       setAiOutput("Terjadi kesalahan saat memproses AI.");
       setLoading(false);
     }
+  };
+
+  // 🔥 FUNGSI COPY TO CLIPBOARD
+  const handleCopyOutput = () => {
+    if (!aiOutput) return;
+    navigator.clipboard.writeText(aiOutput);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000); // Pesan "Tersalin!" hilang setelah 2 detik
   };
 
   return (
@@ -220,7 +235,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
         {/* KOLOM KIRI: MASTER PROMPT & FORM DINAMIS */}
         <div className="lg:col-span-6 space-y-6">
           
-          {/* Pilihan Master Prompt */}
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
             <h3 className="text-sm font-bold text-emerald-400 mb-3">1. Pilih Master Prompt</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-2">
@@ -241,12 +255,11 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
             </div>
           </div>
 
-          {/* Form Adaptif Sesuai Kebutuhan */}
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-200">2. Isi Detail Sesuai Mode Aktif</h3>
               <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-bold uppercase">
-                Mode: {currentTemplateObj.category}
+                Mode: {currentTemplateObj?.category || "Unknown"}
               </span>
             </div>
 
@@ -273,7 +286,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
               </div>
             </div>
 
-            {/* OPSI KHUSUS FOTO / GAMBAR SENDIRI */}
             {isImageMode && (
               <div className="bg-[#161a2e] p-4 rounded-xl border border-indigo-500/30 space-y-2">
                 <label className="block text-xs text-indigo-300 font-bold">🖼️ Link / URL Foto Produk Sendiri (Opsional)</label>
@@ -284,7 +296,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
                   placeholder="https://example.com/foto-produk-saya.jpg"
                   className="w-full bg-[#111424] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500"
                 />
-                <p className="text-[10px] text-gray-400">Masukkan link gambar produk kamu jika ingin AI menganalisis foto tersebut.</p>
               </div>
             )}
 
@@ -316,64 +327,28 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Platform</label>
-                <select
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                >
-                  <option>TikTok</option>
-                  <option>Instagram Reels</option>
-                  <option>YouTube Shorts</option>
-                  <option>Meta Ads (FB/IG)</option>
-                  <option>Website / Landing Page</option>
+                <select value={platform} onChange={(e) => setPlatform(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                  <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Meta Ads (FB/IG)</option><option>Website / Landing Page</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Tujuan / Goal</label>
-                <select
-                  value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                >
-                  <option>Sales / Konversi</option>
-                  <option>Brand Awareness</option>
-                  <option>Engagement / Leads</option>
-                  <option>Edukasi</option>
+                <select value={goal} onChange={(e) => setGoal(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                  <option>Sales / Konversi</option><option>Brand Awareness</option><option>Engagement / Leads</option><option>Edukasi</option>
                 </select>
               </div>
-
-              {/* OPSI DURASI VIDEO FLEKSIBEL (Hanya muncul saat mode Video) */}
               {isVideoMode ? (
                 <div>
                   <label className="block text-xs text-emerald-400 font-bold mb-1">Durasi Video AI</label>
-                  <select
-                    value={videoDuration}
-                    onChange={(e) => setVideoDuration(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-emerald-500/50 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option value="5 Detik">5 Detik (Standard)</option>
-                    <option value="6 Detik">6 Detik</option>
-                    <option value="7 Detik">7 Detik</option>
-                    <option value="8 Detik">8 Detik</option>
-                    <option value="9 Detik">9 Detik</option>
-                    <option value="10 Detik">10 Detik (Max Standard)</option>
-                    <option value="12 Detik">12 Detik</option>
-                    <option value="15 Detik">15 Detik</option>
+                  <select value={videoDuration} onChange={(e) => setVideoDuration(e.target.value)} className="w-full bg-[#1a1f33] border border-emerald-500/50 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>5 Detik</option><option>10 Detik</option><option>15 Detik</option>
                   </select>
                 </div>
               ) : (
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Brand Voice</label>
-                  <select
-                    value={brandVoice}
-                    onChange={(e) => setBrandVoice(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option>Professional</option>
-                    <option>Friendly</option>
-                    <option>Luxury / Premium</option>
-                    <option>Fun & Energetic</option>
+                  <select value={brandVoice} onChange={(e) => setBrandVoice(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>Professional</option><option>Friendly</option><option>Luxury / Premium</option><option>Fun & Energetic</option>
                   </select>
                 </div>
               )}
@@ -383,44 +358,20 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Preset Konten</label>
-                  <select
-                    value={contentPreset}
-                    onChange={(e) => setContentPreset(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option>Viral Content</option>
-                    <option>Soft Selling</option>
-                    <option>Hard Selling</option>
-                    <option>Storytelling</option>
-                    <option>Product Demo</option>
+                  <select value={contentPreset} onChange={(e) => setContentPreset(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>Viral Content</option><option>Storytelling</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Format Video</label>
-                  <select
-                    value={videoFormat}
-                    onChange={(e) => setVideoFormat(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option>Cinematic</option>
-                    <option>Talking Head</option>
-                    <option>UGC Style</option>
-                    <option>Product Showcase</option>
+                  <select value={videoFormat} onChange={(e) => setVideoFormat(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>Cinematic</option><option>UGC Style</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Visual Style</label>
-                  <select
-                    value={visualStyle}
-                    onChange={(e) => setVisualstyle(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option>Apple Style</option>
-                    <option>Modern SaaS</option>
-                    <option>Luxury Cinematic</option>
-                    <option>Minimalist</option>
+                  <select value={visualStyle} onChange={(e) => setVisualstyle(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>Apple Style</option><option>Minimalist</option>
                   </select>
                 </div>
               </div>
@@ -430,30 +381,15 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
               {isVideoMode && (
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Brand Voice</label>
-                  <select
-                    value={brandVoice}
-                    onChange={(e) => setBrandVoice(e.target.value)}
-                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                  >
-                    <option>Professional</option>
-                    <option>Friendly</option>
-                    <option>Luxury / Premium</option>
-                    <option>Fun & Energetic</option>
+                  <select value={brandVoice} onChange={(e) => setBrandVoice(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                    <option>Professional</option><option>Friendly</option>
                   </select>
                 </div>
               )}
-
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Call to Action (CTA)</label>
-                <select
-                  value={cta}
-                  onChange={(e) => setCta(e.target.value)}
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                >
-                  <option>Beli Sekarang</option>
-                  <option>Klik Link di Bio</option>
-                  <option>Follow untuk Tips</option>
-                  <option>Komen "MAU"</option>
+                <select value={cta} onChange={(e) => setCta(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-emerald-500">
+                  <option>Beli Sekarang</option><option>Klik Link di Bio</option>
                 </select>
               </div>
             </div>
@@ -463,7 +399,7 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
               <textarea
                 value={additionalInfo}
                 onChange={(e) => setAdditionalInfo(e.target.value)}
-                placeholder="Tuliskan catatan khusus atau detail promosi..."
+                placeholder="Tuliskan catatan khusus..."
                 rows={2}
                 className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500 resize-none"
               />
@@ -473,7 +409,7 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
         </div>
 
         {/* KOLOM KANAN: PREVIEW PROMPT & HASIL AI */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-6 space-y-6 flex flex-col">
           
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
             <h3 className="text-sm font-bold text-gray-200 mb-3">3. Preview Master Prompt</h3>
@@ -483,7 +419,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
               rows={10}
               className="w-full bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 outline-none focus:border-emerald-500 resize-none"
             />
-            
             <button
               onClick={handleGenerateAI}
               disabled={loading}
@@ -493,11 +428,32 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
             </button>
           </div>
 
-          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-gray-200 mb-3">Hasil Output AI</h3>
-            <div className="bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 h-56 overflow-y-auto whitespace-pre-wrap">
-              {aiOutput || "Hasil jawaban AI akan muncul di sini setelah kamu klik tombol 'Generate Sekarang'..."}
+          {/* KOTAK HASIL OUTPUT AI YANG BISA DI-EDIT DAN DI-COPY */}
+          <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-200">Hasil Output AI</h3>
+              
+              {/* TOMBOL COPY */}
+              <button
+                onClick={handleCopyOutput}
+                disabled={!aiOutput} // Disable kalau output masih kosong
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  isCopied
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : "bg-[#1a1f33] text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500"
+                } ${!aiOutput && "opacity-50 cursor-not-allowed"}`}
+              >
+                {isCopied ? "✅ Tersalin!" : "📋 Salin Hasil"}
+              </button>
             </div>
+            
+            {/* TEXTAREA AGAR HASIL AI BISA DI-EDIT USER */}
+            <textarea
+              value={aiOutput}
+              onChange={(e) => setAiOutput(e.target.value)}
+              placeholder="Hasil jawaban AI akan muncul di sini... Setelah muncul, kamu bisa langsung mengetik dan mengedit teks di kotak ini."
+              className="w-full flex-1 min-h-[200px] bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 whitespace-pre-wrap outline-none focus:border-emerald-500 resize-none"
+            />
           </div>
 
         </div>
