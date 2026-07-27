@@ -21,7 +21,7 @@ export default function GeneratePage() {
   const [additionalInfo, setAdditionalInfo] = useState("");
 
   // State Khusus Video (Master 8)
-  const [videoDuration, setVideoDuration] = useState("5 Detik"); // Fleksibel dari 5s, 10s, atau custom
+  const [videoDuration, setVideoDuration] = useState("5 Detik"); 
   const [contentPreset, setContentPreset] = useState("Viral Content");
   const [videoFormat, setVideoFormat] = useState("Cinematic");
   const [visualStyle, setVisualstyle] = useState("Apple Style");
@@ -95,15 +95,17 @@ PROJECT INFORMATION:
 
   useEffect(() => {
     setSavedPrompts(defaultTemplates);
-    updatePromptText(defaultTemplates[7]); // Default ke Master 8
+    // Kita set default-nya master-8 tanpa panggil updatePromptText di sini, 
+    // karena akan di-handle oleh useEffect otomatis di bawah.
   }, []);
 
   const handleSelectTemplate = (item: any) => {
     setSelectedTemplate(item.id);
-    updatePromptText(item);
+    // Tidak perlu updatePromptText manual di sini, akan otomatis ketarik
   };
 
   const updatePromptText = (item: any) => {
+    if (!item) return;
     const pName = productName || "Produk Pilihan";
     const tMarket = targetMarket || "Audiens Umum";
     const pPoint = painPoint || "Masalah Konsumen";
@@ -164,14 +166,29 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
     setPromptInput(result);
   };
 
-  // Cek Tipe Master Prompt yang Aktif Saat Ini
-  const currentTemplateObj = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7];
+  // =====================================================================
+  // 🔥 INI KODE TAMBAHANNYA: Agar Otomatis Real-time Saat Ngetik Form
+  // =====================================================================
+  useEffect(() => {
+    // Cari template yang lagi aktif
+    const currentActiveTemplate = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7];
+    
+    // Tiap kali ada perubahan di state form atau pilihan template, 
+    // update teks pratinjau otomatis!
+    updatePromptText(currentActiveTemplate);
+    
+  // List semua state yang harus dipantau. Kalau salah satu berubah, useEffect ini jalan.
+  }, [
+    selectedTemplate, savedPrompts, productName, targetMarket, painPoint, 
+    usp, platform, goal, brandVoice, cta, additionalInfo, videoDuration, 
+    contentPreset, videoFormat, visualStyle, imageUrl
+  ]);
+  // =====================================================================
+
+  // Cek Tipe Master Prompt yang Aktif Saat Ini untuk UI
+  const currentTemplateObj = savedPrompts.find((i) => i.id === selectedTemplate) || savedPrompts[7] || defaultTemplates[7];
   const isVideoMode = currentTemplateObj.type === "video";
   const isImageMode = currentTemplateObj.type === "image";
-
-  const handleApplyInteractiveForm = () => {
-    updatePromptText(currentTemplateObj);
-  };
 
   const handleGenerateAI = async () => {
     setLoading(true);
@@ -451,13 +468,6 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
                 className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500 resize-none"
               />
             </div>
-
-            <button
-              onClick={handleApplyInteractiveForm}
-              className="w-full py-2.5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md"
-            >
-              🔄 Perbarui Prompt Otomatis
-            </button>
           </div>
 
         </div>
