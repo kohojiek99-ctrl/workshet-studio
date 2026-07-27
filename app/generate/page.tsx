@@ -8,7 +8,7 @@ export default function GeneratePage() {
   const [promptInput, setPromptInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
-  // Form States
+  // Form States (Universal)
   const [productName, setProductName] = useState("");
   const [targetMarket, setTargetMarket] = useState("");
   const [painPoint, setPainPoint] = useState("");
@@ -19,11 +19,11 @@ export default function GeneratePage() {
   const [cta, setCta] = useState("Beli Sekarang");
   const [additionalInfo, setAdditionalInfo] = useState("");
 
-  const [videoDuration, setVideoDuration] = useState("5 Detik"); 
+  // Form States Khusus Video/Storyboard
+  const [videoDuration, setVideoDuration] = useState("5 Detik");
   const [contentPreset, setContentPreset] = useState("Viral Content");
   const [videoFormat, setVideoFormat] = useState("Cinematic");
   const [visualStyle, setVisualstyle] = useState("Apple Style");
-  const [imageUrl, setImageUrl] = useState("");
 
   const loadPrompts = () => {
     const savedData = localStorage.getItem("worksheet_master_prompts");
@@ -42,7 +42,7 @@ export default function GeneratePage() {
       }
     }
 
-    // Default Fallback jika kosong
+    // Default Fallback
     const defaultPrompts = [
       {
         id: "master-1",
@@ -78,7 +78,6 @@ PROJECT INFORMATION:
 
   useEffect(() => {
     loadPrompts();
-
     window.addEventListener("prompts_updated", loadPrompts);
     return () => {
       window.removeEventListener("prompts_updated", loadPrompts);
@@ -89,47 +88,46 @@ PROJECT INFORMATION:
   const isVideoMode = currentTemplateObj?.type === "video";
   const isImageMode = currentTemplateObj?.type === "image";
 
+  // Generator Logika Racikan Prompt Berdasarkan Mode
   useEffect(() => {
     if (!currentTemplateObj) return;
 
-    const pName = productName || "Produk Pilihan";
+    const pName = productName || "Produk / Topik Pilihan";
     const tMarket = targetMarket || "Audiens Umum";
     const pPoint = painPoint || "Masalah Konsumen";
-    const uSp = usp || "Keunggulan Produk";
-    const info = additionalInfo || "-";
+    const uSp = usp || "Keunggulan Utama";
+    const info = additionalInfo || "Tidak ada catatan tambahan";
 
     let result = "";
 
     if (isVideoMode) {
       result = `${currentTemplateObj.content}
-- Platform: ${platform}
-- Informasi Tambahan: ${info}
 
-CONTENT PRESET: ${contentPreset}
-VIDEO FORMAT: ${videoFormat}
-VISUAL STYLE: ${visualStyle}
-BRAND PERSONALITY: ${brandVoice}
-CTA: ${cta}
+# DETAIL PROJECT STORYBOARD
+- Topik / Produk: ${pName}
+- Target Audience: ${tMarket}
+- Durasi Video: ${videoDuration}
+- Content Preset: ${contentPreset}
+- Video Format: ${videoFormat}
+- Visual Style: ${visualStyle}
+- Catatan Tambahan: ${info}
 
-# ROLE & TUGAS
-Anda adalah AI Creative Director profesional. Ubah informasi di atas menjadi storyboard video premium berbahasa Indonesia dengan standar agensi dunia.
-# OUTPUT
-1. Creative Brief (Big Idea, Hook, Visual Direction)
-2. Story Structure & Storyboard Lengkap per Scene
-3. AI Video Prompt (Prompt ultra-detail untuk Veo, Kling, Runway, Luma berdurasi ${videoDuration})
-4. Editing Direction & CTA Ending.`;
+# TUGAS AI
+Bertindaklah sebagai AI Video Director profesional. Berdasarkan master prompt dan detail project di atas, susun storyboard lengkap beserta prompt generasi video AI per scene.`;
     } else if (isImageMode) {
       result = `${currentTemplateObj.content}
-- Nama Produk: ${pName}
-- Referensi Foto / Aset Produk: ${imageUrl || "Gunakan foto produk standar unggulan"}
-- Visual Style: ${visualStyle}
-- Target Market: ${tMarket}
-- Informasi Tambahan: ${info}
 
-# TUGAS
-Anda adalah Visual Director dan AI Prompt Engineer. Buatkan prompt generasi gambar serta konsep visual yang menjual dan estetik.`;
+# DETAIL VISUAL ASSET
+- Nama Objek / Produk: ${pName}
+- Target Market / Nuansa: ${tMarket}
+- Visual Style: ${visualStyle}
+- Detail Tambahan: ${info}
+
+# TUGAS AI
+Bertindaklah sebagai AI Image Prompt Engineer. Buatkan prompt generasi gambar (untuk Midjourney, DALL-E, Flux) yang sangat detail, estetik, dan menjual.`;
     } else {
       result = `${currentTemplateObj.content}
+
 # INFORMASI UTAMA
 - Nama Produk / Topik: ${pName}
 - Target Market: ${tMarket}
@@ -139,16 +137,17 @@ Anda adalah Visual Director dan AI Prompt Engineer. Buatkan prompt generasi gamb
 - Tujuan: ${goal}
 - Brand Voice: ${brandVoice}
 - CTA: ${cta}
-- Info Tambahan: ${info}
+- Catatan Tambahan: ${info}
 
-Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
+# TUGAS AI
+Gunakan instruksi master prompt di atas untuk merumuskan hasil akhir yang profesional, tajam, dan siap pakai dalam Bahasa Indonesia.`;
     }
 
     setPromptInput(result);
   }, [
     currentTemplateObj, productName, targetMarket, painPoint, usp, 
     platform, goal, brandVoice, cta, additionalInfo, videoDuration, 
-    contentPreset, videoFormat, visualStyle, imageUrl
+    contentPreset, videoFormat, visualStyle
   ]);
 
   const handleCopyAndOpenGPT = () => {
@@ -168,13 +167,13 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
           AI Studio & Master Generator ✨
         </h1>
         <p className="text-gray-400 text-sm">
-          Semua Master Prompt di bawah ini terhubung langsung secara real-time dari menu Prompts Anda.
+          Formulir di bawah ini otomatis menyesuaikan dengan kategori & tipe master prompt yang Anda pilih.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* KOLOM KIRI: PILIH MASTER PROMPT & FORM */}
+        {/* KOLOM KIRI: PILIH MASTER PROMPT & FORM DINAMIS */}
         <div className="lg:col-span-6 space-y-6">
           
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
@@ -184,93 +183,190 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
                 <button
                   key={item.id}
                   onClick={() => setSelectedTemplate(item.id)}
-                  className={`p-3 rounded-xl text-left border text-xs font-medium transition-all ${
+                  className={`p-3 rounded-xl text-left border text-xs font-medium transition-all cursor-pointer ${
                     selectedTemplate === item.id
                       ? "bg-emerald-500/10 border-emerald-500 text-emerald-300 shadow-lg shadow-emerald-500/10"
                       : "bg-[#1a1f33] border-gray-800 text-gray-300 hover:border-gray-700"
                   }`}
                 >
                   <p className="font-bold truncate">{item.title}</p>
-                  <span className="text-[10px] text-gray-400">{item.category}</span>
+                  <span className="text-[10px] text-gray-400 uppercase">{item.category} • {item.type || "text"}</span>
                 </button>
               ))}
             </div>
           </div>
 
+          {/* BAGIAN 2: FORM DINAMIS BERDASARKAN TIPE PROMPT */}
           <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-200">2. Isi Detail Sesuai Kebutuhan</h3>
               <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-bold uppercase">
-                Mode: {currentTemplateObj?.category || "General"}
+                Mode: {currentTemplateObj?.type || "text"} ({currentTemplateObj?.category})
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Nama Produk / Topik</label>
-                <input
-                  type="text"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  placeholder="Contoh: Serum Wajah Glowing"
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                />
+            {/* FORM KHUSUS VIDEO / STORYBOARD */}
+            {isVideoMode ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Topik / Nama Produk Video</label>
+                    <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder="Contoh: Powerbank MagSafe"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Target Audience</label>
+                    <input
+                      type="text"
+                      value={targetMarket}
+                      onChange={(e) => setTargetMarket(e.target.value)}
+                      placeholder="Contoh: Tech Enthusiast & Traveler"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Durasi Video</label>
+                    <select value={videoDuration} onChange={(e) => setVideoDuration(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>5 Detik</option><option>15 Detik</option><option>30 Detik</option><option>60 Detik</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Content Preset</label>
+                    <select value={contentPreset} onChange={(e) => setContentPreset(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>Viral Content</option><option>Cinematic Commercial</option><option>Product Showcase</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Visual Style</label>
+                    <select value={visualStyle} onChange={(e) => setVisualstyle(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>Apple Style</option><option>Cyberpunk Neon</option><option>Clean Minimalist</option><option>Warm Cinematic</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Target Market</label>
-                <input
-                  type="text"
-                  value={targetMarket}
-                  onChange={(e) => setTargetMarket(e.target.value)}
-                  placeholder="Contoh: Wanita 20-35 tahun"
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                />
+            ) : isImageMode ? (
+              /* FORM KHUSUS IMAGE / PHOTO ASSET */
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Nama Objek / Produk</label>
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Contoh: Botol Parfum Mewah di atas Batu Marmer"
+                    className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Target Market / Nuansa</label>
+                    <input
+                      type="text"
+                      value={targetMarket}
+                      onChange={(e) => setTargetMarket(e.target.value)}
+                      placeholder="Contoh: Elegan, Mewah, Eksklusif"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Visual Style</label>
+                    <select value={visualStyle} onChange={(e) => setVisualstyle(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>Photorealistic 8K</option><option>Studio Lighting</option><option>Moody Dark Aesthetic</option><option>Macro Shot</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+            ) : (
+              /* FORM STANDAR COPYWRITING / ADS */
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Nama Produk / Topik</label>
+                    <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder="Contoh: Serum Wajah Glowing"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Target Market</label>
+                    <input
+                      type="text"
+                      value={targetMarket}
+                      onChange={(e) => setTargetMarket(e.target.value)}
+                      placeholder="Contoh: Wanita 20-35 tahun"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Masalah Utama (Pain Point)</label>
+                    <input
+                      type="text"
+                      value={painPoint}
+                      onChange={(e) => setPainPoint(e.target.value)}
+                      placeholder="Contoh: Kulit kusam & flek hitam"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Keunggulan / USP</label>
+                    <input
+                      type="text"
+                      value={usp}
+                      onChange={(e) => setUsp(e.target.value)}
+                      placeholder="Contoh: Cerah dalam 7 hari"
+                      className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Platform</label>
+                    <select value={platform} onChange={(e) => setPlatform(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Meta Ads</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Tujuan</label>
+                    <select value={goal} onChange={(e) => setGoal(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>Sales / Konversi</option><option>Brand Awareness</option><option>Engagement</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Call to Action</label>
+                    <select value={cta} onChange={(e) => setCta(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <option>Beli Sekarang</option><option>Klik Link di Bio</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Catatan / Informasi Tambahan (Opsional)</label>
+              <input
+                type="text"
+                value={additionalInfo}
+                onChange={(e) => setAdditionalInfo(e.target.value)}
+                placeholder="Contoh: Diskon khusus hari ini gratis ongkir"
+                className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Masalah Utama (Pain Point)</label>
-                <input
-                  type="text"
-                  value={painPoint}
-                  onChange={(e) => setPainPoint(e.target.value)}
-                  placeholder="Contoh: Kulit kusam"
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Keunggulan / USP</label>
-                <input
-                  type="text"
-                  value={usp}
-                  onChange={(e) => setUsp(e.target.value)}
-                  placeholder="Contoh: Hasil 7 hari"
-                  className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Platform</label>
-                <select value={platform} onChange={(e) => setPlatform(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                  <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Meta Ads</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Tujuan</label>
-                <select value={goal} onChange={(e) => setGoal(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                  <option>Sales / Konversi</option><option>Brand Awareness</option><option>Engagement</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Call to Action</label>
-                <select value={cta} onChange={(e) => setCta(e.target.value)} className="w-full bg-[#1a1f33] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                  <option>Beli Sekarang</option><option>Klik Link di Bio</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -285,7 +381,7 @@ Buatkan materi lengkap, profesional, dan siap pakai dalam Bahasa Indonesia.`;
             <textarea
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
-              rows={16}
+              rows={18}
               className="w-full bg-[#161a2e] border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-300 outline-none focus:border-emerald-500 resize-none mb-4"
             />
 
