@@ -25,22 +25,60 @@ export default function GeneratePage() {
   const [visualStyle, setVisualstyle] = useState("Apple Style");
   const [imageUrl, setImageUrl] = useState("");
 
-  // Ambil data prompt dari localStorage & Dengarkan sinyal update
   const loadPrompts = () => {
     const savedData = localStorage.getItem("worksheet_master_prompts");
     if (savedData) {
-      const parsed = JSON.parse(savedData);
-      setSavedPrompts(parsed);
-      if (parsed.length > 0 && (!selectedTemplate || !parsed.find((p: any) => p.id === selectedTemplate))) {
-        setSelectedTemplate(parsed[0].id);
+      try {
+        const parsed = JSON.parse(savedData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedPrompts(parsed);
+          if (!selectedTemplate || !parsed.find((p: any) => p.id === selectedTemplate)) {
+            setSelectedTemplate(parsed[0].id);
+          }
+          return;
+        }
+      } catch (e) {
+        console.error("Error parsing prompts", e);
       }
     }
+
+    // Default Fallback jika kosong
+    const defaultPrompts = [
+      {
+        id: "master-1",
+        title: "1. MASTER PROMPT META ADS (STOP SCROLL)",
+        category: "Meta Ads",
+        type: "text",
+        content: `Anda adalah Meta Ads Creative Director, Senior Copywriter, dan Performance Marketing Expert. Buatkan iklan Facebook & Instagram Ads dengan Hook Stop Scroll yang kuat, menyentuh pain point, dan menghasilkan konversi tinggi dalam Bahasa Indonesia.`
+      },
+      {
+        id: "master-2",
+        title: "2. MASTER PROMPT TIKTOK ADS",
+        category: "TikTok Ads",
+        type: "text",
+        content: `Anda adalah TikTok Ads Strategist & Viral Content Creator. Buatkan konsep TikTok Ads 3 detik pertama hook yang memukau, script video, dan CTA tinggi dalam Bahasa Indonesia.`
+      },
+      {
+        id: "master-8",
+        title: "8. MASTER PROMPT STORYBOARD VIDEO MODE™",
+        category: "AI Video",
+        type: "video",
+        content: `[AI Cinematic Storyboard Engine]
+PROJECT INFORMATION:
+- Topik/Produk: [PRODUK]
+- Target Audience: [TARGET]
+- Tujuan: [TUJUAN]
+- Durasi Video: [DURASI]`
+      }
+    ];
+    setSavedPrompts(defaultPrompts);
+    setSelectedTemplate(defaultPrompts[0].id);
+    localStorage.setItem("worksheet_master_prompts", JSON.stringify(defaultPrompts));
   };
 
   useEffect(() => {
     loadPrompts();
 
-    // Event listener biar otomatis sinkron saat halaman Prompts diubah
     window.addEventListener("prompts_updated", loadPrompts);
     return () => {
       window.removeEventListener("prompts_updated", loadPrompts);
@@ -51,7 +89,6 @@ export default function GeneratePage() {
   const isVideoMode = currentTemplateObj?.type === "video";
   const isImageMode = currentTemplateObj?.type === "image";
 
-  // Update Teks Prompt Otomatis berdasarkan Form
   useEffect(() => {
     if (!currentTemplateObj) return;
 
