@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [greeting, setGreeting] = useState("Good Afternoon");
 
   useEffect(() => {
@@ -16,6 +18,13 @@ export default function DashboardPage() {
   const handleOpenCustomGPT = () => {
     window.open("https://chatgpt.com/g/g-6a51bd07e8a081918f285736213bdf14-promptcinema-studiotm-pro", "_blank");
   };
+
+  const quickPrompts = [
+    { title: "🎬 Master Storyboard Video", desc: "Buat naskah & prompt Veo/Kling/Runway 5-15 detik", link: "/generate" },
+    { title: "🎯 TikTok & Reels Ads", desc: "Hook 3 detik pertama & skrip konversi tinggi", link: "/generate" },
+    { title: "📈 Meta Ads (FB & IG)", desc: "Stop-scroll hook & copywriting penualan", link: "/generate" },
+    { title: "🖼️ Foto Produk / Visual Asset", desc: "Prompt Midjourney & DALL-E estetis", link: "/generate" },
+  ];
 
   return (
     <div className="p-6 sm:p-8 md:p-10 max-w-[1400px] mx-auto text-white space-y-8">
@@ -48,7 +57,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* METRIC CARDS (Disesuaikan jadi info ekosistem & aktif) */}
+      {/* METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <div className="bg-[#111424] border border-gray-800 rounded-2xl p-6">
@@ -77,7 +86,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* PANDUAN CEPAT / ONBOARDING (POINT 3) */}
+      {/* PANDUAN CEPAT / ONBOARDING */}
       <div className="bg-[#111424] border border-gray-800 rounded-3xl p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white">📖 Panduan Singkat Penggunaan Studio</h3>
@@ -113,33 +122,39 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* RECENT PROJECTS SECTION */}
+      {/* QUICK SHORTCUTS MASTER PROMPT (PENGGANTI RECENT PROJECTS) */}
       <div className="bg-[#111424] border border-gray-800 rounded-3xl p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white">Recent Projects</h3>
-          <span className="text-xs text-emerald-400 cursor-pointer hover:underline">Kelola Semua Project →</span>
+          <h3 className="text-lg font-bold text-white">⚡ Quick Master Prompt Shortcuts</h3>
+          <span 
+            onClick={() => router.push("/generate")}
+            className="text-xs text-emerald-400 cursor-pointer hover:underline font-semibold"
+          >
+            Buka AI Studio Lengkap →
+          </span>
         </div>
 
-        <div className="space-y-3">
-          <div className="bg-[#161a2e] border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <h4 className="font-bold text-sm text-white mb-1">WORKSKET STUDIO</h4>
-              <p className="text-xs text-gray-400">General Project</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickPrompts.map((item, index) => (
+            <div
+              key={index}
+              onClick={() => router.push(item.link)}
+              className="bg-[#161a2e] border border-gray-800 hover:border-emerald-500/50 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-lg hover:shadow-emerald-500/5 flex flex-col justify-between group"
+            >
+              <div className="space-y-2 mb-4">
+                <h4 className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors">
+                  {item.title}
+                </h4>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+              <div className="flex items-center text-xs text-emerald-400 font-bold gap-1">
+                <span>Gunakan Prompt</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
             </div>
-            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold rounded-full">
-              Active
-            </span>
-          </div>
-
-          <div className="bg-[#161a2e] border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <h4 className="font-bold text-sm text-white mb-1">Promo Powerbank Flash Sale</h4>
-              <p className="text-xs text-gray-400">Affiliate TikTok</p>
-            </div>
-            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold rounded-full">
-              Active
-            </span>
-          </div>
+          ))}
         </div>
       </div>
 
